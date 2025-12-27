@@ -9,6 +9,20 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     // Set editor size to accommodate ADSR controls and keyboard
     setSize(800, 380);
 
+    // Add voice mode selector
+    addAndMakeVisible(voiceModeSelector);
+    voiceModeSelector.addItem("Mono", 1);
+    voiceModeSelector.addItem("Poly", 2);
+    voiceModeSelector.addItem("Unison", 3);
+    voiceModeSelector.setSelectedId(2);  // Default: Poly
+
+    addAndMakeVisible(voiceModeLabel);
+    voiceModeLabel.setText("Voice Mode", juce::dontSendNotification);
+    voiceModeLabel.attachToComponent(&voiceModeSelector, true);
+
+    voiceModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.parameters, "voiceMode", voiceModeSelector);
+
     // Add waveform selector
     addAndMakeVisible(waveformSelector);
     waveformSelector.addItem("Sine", 1);
@@ -132,7 +146,7 @@ void CLEMMY3AudioProcessorEditor::paint(juce::Graphics& g)
     // Draw subtitle
     g.setFont(14.0f);
     g.setColour(juce::Colours::lightgrey);
-    g.drawFittedText("Phase 2: ADSR Envelope", getLocalBounds().removeFromTop(80), juce::Justification::centred, 1);
+    g.drawFittedText("Phase 3: Polyphony", getLocalBounds().removeFromTop(80), juce::Justification::centred, 1);
 }
 
 void CLEMMY3AudioProcessorEditor::resized()
@@ -146,6 +160,13 @@ void CLEMMY3AudioProcessorEditor::resized()
     auto topControls = area.removeFromTop(170);
     auto oscArea = topControls.removeFromLeft(400);
     oscArea.reduce(20, 10);
+
+    // Voice mode selector
+    auto voiceModeArea = oscArea.removeFromTop(30);
+    voiceModeArea.removeFromLeft(100); // Space for label
+    voiceModeSelector.setBounds(voiceModeArea);
+
+    oscArea.removeFromTop(10); // Spacing
 
     // Waveform selector
     auto waveformArea = oscArea.removeFromTop(30);

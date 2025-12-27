@@ -26,7 +26,7 @@ void Envelope::setParameters(float attack, float decay, float sustain, float rel
 void Envelope::calculateRates()
 {
     // Minimum attack time to prevent clicks
-    const float minAttackTime = 0.005f;  // 5ms
+    const float minAttackTime = 0.010f;  // 10ms - increased for smoother note starts
     float safeAttackTime = std::max(attackTime, minAttackTime);
 
     // Calculate per-sample increments

@@ -7,7 +7,7 @@
 //==============================================================================
 /**
     CLEMMY3 Editor
-    Phase 2: ADSR Envelope Controls
+    Phase 3: Voice Polyphony & Management
 */
 class CLEMMY3AudioProcessorEditor : public juce::AudioProcessorEditor
 {
@@ -23,6 +23,8 @@ private:
     CLEMMY3AudioProcessor& audioProcessor;
 
     // UI Components
+    juce::ComboBox voiceModeSelector;
+    juce::Label voiceModeLabel;
     juce::ComboBox waveformSelector;
     juce::Label waveformLabel;
     juce::Slider pulseWidthSlider;
@@ -42,6 +44,7 @@ private:
     juce::MidiKeyboardComponent midiKeyboard;
 
     // Parameter attachments
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> voiceModeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pulseWidthAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttachment;

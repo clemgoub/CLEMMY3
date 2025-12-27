@@ -1,6 +1,5 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "DSP/AudioUtils.h"
 
 //==============================================================================
 CLEMMY3AudioProcessor::CLEMMY3AudioProcessor()
@@ -28,6 +27,13 @@ CLEMMY3AudioProcessor::~CLEMMY3AudioProcessor()
 juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    // Voice Mode parameter (Mono=0, Poly=1, Unison=2)
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "voiceMode",
+        "Voice Mode",
+        juce::StringArray{"Mono", "Poly", "Unison"},
+        1));  // Default: Poly
 
     // Waveform parameter (Sine=0, Sawtooth=1, Square=2)
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
@@ -135,12 +141,8 @@ void CLEMMY3AudioProcessor::changeProgramName(int, const juce::String&)
 //==============================================================================
 void CLEMMY3AudioProcessor::prepareToPlay(double sampleRate, int)
 {
-    // Initialize DSP components with sample rate
-    oscillator.setSampleRate(sampleRate);
-    envelope.setSampleRate(sampleRate);
-
-    // Reset state
-    currentMidiNote = -1;
+    // Initialize voice manager with sample rate
+    voiceManager.setSampleRate(sampleRate);
 }
 
 void CLEMMY3AudioProcessor::releaseResources()
@@ -188,6 +190,7 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     combinedMidi.addEvents(virtualKeyboardMidi, 0, buffer.getNumSamples(), 0);
 
     // Get current parameter values
+    int voiceModeIndex = parameters.getRawParameterValue("voiceMode")->load();
     int waveformIndex = parameters.getRawParameterValue("waveform")->load();
     float pulseWidth = parameters.getRawParameterValue("pulseWidth")->load();
     float attack = parameters.getRawParameterValue("attack")->load();
@@ -195,12 +198,13 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     float sustain = parameters.getRawParameterValue("sustain")->load();
     float release = parameters.getRawParameterValue("release")->load();
 
-    // Update oscillator parameters
-    oscillator.setWaveform(static_cast<Oscillator::Waveform>(waveformIndex));
-    oscillator.setPulseWidth(pulseWidth);
+    // Update voice manager mode
+    voiceManager.setVoiceMode(static_cast<VoiceManager::VoiceMode>(voiceModeIndex));
 
-    // Update envelope parameters
-    envelope.setParameters(attack, decay, sustain, release);
+    // Broadcast parameters to all voices
+    voiceManager.setOscillatorWaveform(static_cast<Oscillator::Waveform>(waveformIndex));
+    voiceManager.setOscillatorPulseWidth(pulseWidth);
+    voiceManager.setEnvelopeParameters(attack, decay, sustain, release);
 
     // Process MIDI messages (from both sources)
     for (const auto metadata : combinedMidi)
@@ -209,34 +213,22 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
         if (message.isNoteOn())
         {
-            currentMidiNote = message.getNoteNumber();
-            float frequency = AudioUtils::midiNoteToFrequency(currentMidiNote);
-            oscillator.setFrequency(frequency);
-
-            // Trigger envelope with velocity
+            int midiNote = message.getNoteNumber();
             float velocity = message.getFloatVelocity();
-            envelope.noteOn(velocity);
+            voiceManager.noteOn(midiNote, velocity);
         }
         else if (message.isNoteOff())
         {
-            if (message.getNoteNumber() == currentMidiNote)
-            {
-                // Release envelope
-                envelope.noteOff();
-                currentMidiNote = -1;
-            }
+            int midiNote = message.getNoteNumber();
+            voiceManager.noteOff(midiNote);
         }
     }
 
-    // Generate audio samples
+    // Generate audio samples from voice manager
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
-        // Generate oscillator sample
-        float oscSample = oscillator.processSample();
-
-        // Apply envelope
-        float envLevel = envelope.processSample();
-        float output = oscSample * envLevel * 0.3f;
+        // Get mixed output from all active voices
+        float output = voiceManager.processSample() * 0.3f;
 
         // Output to all channels
         for (int channel = 0; channel < totalNumOutputChannels; ++channel)

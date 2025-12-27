@@ -1,13 +1,12 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include "DSP/Oscillator.h"
-#include "DSP/Envelope.h"
+#include "DSP/VoiceManager.h"
 
 //==============================================================================
 /**
     CLEMMY3 - Triple Oscillator Synthesizer
-    Phase 2: ADSR Envelope Generator
+    Phase 3: Voice Polyphony & Management
 */
 class CLEMMY3AudioProcessor : public juce::AudioProcessor
 {
@@ -59,10 +58,8 @@ public:
 private:
     juce::MidiKeyboardState keyboardState;
     //==============================================================================
-    // Phase 2: Oscillator + Envelope
-    Oscillator oscillator;
-    Envelope envelope;
-    int currentMidiNote = -1;
+    // Phase 3: Polyphonic voice management
+    VoiceManager voiceManager;
 
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
