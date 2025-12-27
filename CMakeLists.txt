@@ -23,14 +23,17 @@ juce_add_plugin(CLEMMY3
 target_sources(CLEMMY3
     PRIVATE
         Source/PluginProcessor.cpp
-        Source/PluginEditor.cpp)
+        Source/PluginEditor.cpp
+        Source/DSP/Oscillator.cpp)
 
 # Add compile definitions
 target_compile_definitions(CLEMMY3
     PUBLIC
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL=0
-        JUCE_VST3_CAN_REPLACE_VST2=0)
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_STANDALONE_FILTER_WINDOW_USE_KIOSK_MODE=0
+        JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=0)
 
 # Link JUCE libraries
 target_link_libraries(CLEMMY3

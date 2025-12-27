@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "DSP/AudioUtils.h"
 
 //==============================================================================
 CLEMMY3AudioProcessor::CLEMMY3AudioProcessor()
@@ -11,13 +12,38 @@ CLEMMY3AudioProcessor::CLEMMY3AudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+#else
+    :
 #endif
+      parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
 {
 }
 
 CLEMMY3AudioProcessor::~CLEMMY3AudioProcessor()
 {
+}
+
+//==============================================================================
+juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::createParameterLayout()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    // Waveform parameter (Sine=0, Sawtooth=1, Square=2)
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "waveform",
+        "Waveform",
+        juce::StringArray{"Sine", "Sawtooth", "Square"},
+        0));  // Default: Sine
+
+    // Pulse Width parameter (for Square wave)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "pulseWidth",
+        "Pulse Width",
+        juce::NormalisableRange<float>(0.01f, 0.99f, 0.01f),
+        0.5f));  // Default: 50%
+
+    return { params.begin(), params.end() };
 }
 
 //==============================================================================
@@ -68,25 +94,28 @@ int CLEMMY3AudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void CLEMMY3AudioProcessor::setCurrentProgram(int index)
+void CLEMMY3AudioProcessor::setCurrentProgram(int)
 {
 }
 
-const juce::String CLEMMY3AudioProcessor::getProgramName(int index)
+const juce::String CLEMMY3AudioProcessor::getProgramName(int)
 {
     return {};
 }
 
-void CLEMMY3AudioProcessor::changeProgramName(int index, const juce::String& newName)
+void CLEMMY3AudioProcessor::changeProgramName(int, const juce::String&)
 {
 }
 
 //==============================================================================
-void CLEMMY3AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void CLEMMY3AudioProcessor::prepareToPlay(double sampleRate, int)
 {
-    // Reset phase when playback starts
-    phase = 0.0;
+    // Initialize oscillator with sample rate
+    oscillator.setSampleRate(sampleRate);
+
+    // Reset state
     noteIsOn = false;
+    currentMidiNote = -1;
 }
 
 void CLEMMY3AudioProcessor::releaseResources()
@@ -100,7 +129,6 @@ bool CLEMMY3AudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
     juce::ignoreUnused(layouts);
     return true;
   #else
-    // This is where you check if the layout is supported.
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
      && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
@@ -125,42 +153,57 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // Process MIDI messages
-    for (const auto metadata : midiMessages)
+    // Merge MIDI from virtual keyboard with incoming MIDI
+    juce::MidiBuffer virtualKeyboardMidi;
+    keyboardState.processNextMidiBuffer(virtualKeyboardMidi, 0, buffer.getNumSamples(), true);
+
+    // Combine both MIDI sources
+    juce::MidiBuffer combinedMidi;
+    combinedMidi.addEvents(midiMessages, 0, buffer.getNumSamples(), 0);
+    combinedMidi.addEvents(virtualKeyboardMidi, 0, buffer.getNumSamples(), 0);
+
+    // Get current parameter values
+    int waveformIndex = parameters.getRawParameterValue("waveform")->load();
+    float pulseWidth = parameters.getRawParameterValue("pulseWidth")->load();
+
+    // Update oscillator parameters
+    oscillator.setWaveform(static_cast<Oscillator::Waveform>(waveformIndex));
+    oscillator.setPulseWidth(pulseWidth);
+
+    // Process MIDI messages (from both sources)
+    for (const auto metadata : combinedMidi)
     {
         auto message = metadata.getMessage();
 
         if (message.isNoteOn())
         {
+            currentMidiNote = message.getNoteNumber();
+            float frequency = AudioUtils::midiNoteToFrequency(currentMidiNote);
+            oscillator.setFrequency(frequency);
             noteIsOn = true;
         }
         else if (message.isNoteOff())
         {
-            noteIsOn = false;
+            if (message.getNoteNumber() == currentMidiNote)
+            {
+                noteIsOn = false;
+                currentMidiNote = -1;
+            }
         }
     }
 
-    // Generate 440Hz sine wave if note is on
+    // Generate audio samples
     if (noteIsOn)
     {
-        const float frequency = 440.0f;
-        const float sampleRate = static_cast<float>(getSampleRate());
-        const float phaseIncrement = frequency / sampleRate;
-
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            float sineValue = std::sin(phase * 2.0f * juce::MathConstants<float>::pi);
+            float oscSample = oscillator.processSample();
 
             // Output to all channels
             for (int channel = 0; channel < totalNumOutputChannels; ++channel)
             {
-                buffer.setSample(channel, sample, sineValue * 0.3f);
+                buffer.setSample(channel, sample, oscSample * 0.3f);
             }
-
-            // Increment phase
-            phase += phaseIncrement;
-            if (phase >= 1.0)
-                phase -= 1.0;
         }
     }
     else
@@ -184,12 +227,24 @@ juce::AudioProcessorEditor* CLEMMY3AudioProcessor::createEditor()
 //==============================================================================
 void CLEMMY3AudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    // Save plugin state (to be implemented in later phases)
+    // Save parameters
+    auto state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void CLEMMY3AudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-    // Restore plugin state (to be implemented in later phases)
+    // Restore parameters
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState.get() != nullptr)
+    {
+        if (xmlState->hasTagName(parameters.state.getType()))
+        {
+            parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
+        }
+    }
 }
 
 //==============================================================================

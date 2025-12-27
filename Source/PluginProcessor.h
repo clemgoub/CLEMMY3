@@ -1,11 +1,12 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "DSP/Oscillator.h"
 
 //==============================================================================
 /**
     CLEMMY3 - Triple Oscillator Synthesizer
-    Phase 0: Test implementation with 440Hz sine wave
+    Phase 1: Single oscillator engine with PolyBLEP anti-aliasing
 */
 class CLEMMY3AudioProcessor : public juce::AudioProcessor
 {
@@ -47,11 +48,22 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-private:
     //==============================================================================
-    // Phase 0: Test sine wave oscillator
-    double phase = 0.0;
+    // Parameters (public for editor access)
+    juce::AudioProcessorValueTreeState parameters;
+
+    // MIDI keyboard state for virtual keyboard
+    juce::MidiKeyboardState& getKeyboardState() { return keyboardState; }
+
+private:
+    juce::MidiKeyboardState keyboardState;
+    //==============================================================================
+    // Phase 1: Real oscillator with multiple waveforms
+    Oscillator oscillator;
     bool noteIsOn = false;
+    int currentMidiNote = -1;
+
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CLEMMY3AudioProcessor)
 };
