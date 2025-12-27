@@ -1,0 +1,69 @@
+# Build directories
+build/
+cmake-build-*/
+Builds/
+
+# IDE files
+.vscode/
+.vs/
+.idea/
+*.xcworkspace
+*.xcodeproj
+*.sln
+*.vcxproj*
+*.user
+
+# Compiled binaries
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.app
+*.vst3
+*.component
+*.aaxplugin
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Build outputs
+*.o
+*.obj
+*.lo
+*.slo
+*.ko
+
+# Qt Creator
+*.user
+*.autosave
+
+# Temporary files
+*.swp
+*.swo
+*~
+*.tmp
+*.log
+
+# Python reference repository (separate git repo)
+reference-python/
+
+# Documentation builds
+Docs/html/
+Docs/latex/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
