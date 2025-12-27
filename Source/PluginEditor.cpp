@@ -6,8 +6,8 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     : AudioProcessorEditor(&p), audioProcessor(p),
       midiKeyboard(audioProcessor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard)
 {
-    // Set editor size to accommodate keyboard
-    setSize(600, 300);
+    // Set editor size to accommodate ADSR controls and keyboard
+    setSize(800, 380);
 
     // Add waveform selector
     addAndMakeVisible(waveformSelector);
@@ -39,6 +39,74 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     pulseWidthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "pulseWidth", pulseWidthSlider);
 
+    // Add ADSR envelope controls
+    // Attack
+    addAndMakeVisible(attackSlider);
+    attackSlider.setSliderStyle(juce::Slider::LinearVertical);
+    attackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    attackSlider.setRange(0.001, 2.0, 0.001);
+    attackSlider.setValue(0.01);
+    attackSlider.setTextValueSuffix(" s");
+    attackSlider.setSkewFactorFromMidPoint(0.1);  // Skewed for better control
+
+    addAndMakeVisible(attackLabel);
+    attackLabel.setText("Attack", juce::dontSendNotification);
+    attackLabel.setJustificationType(juce::Justification::centredTop);
+    attackLabel.attachToComponent(&attackSlider, false);
+
+    attackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "attack", attackSlider);
+
+    // Decay
+    addAndMakeVisible(decaySlider);
+    decaySlider.setSliderStyle(juce::Slider::LinearVertical);
+    decaySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    decaySlider.setRange(0.001, 2.0, 0.001);
+    decaySlider.setValue(0.3);
+    decaySlider.setTextValueSuffix(" s");
+    decaySlider.setSkewFactorFromMidPoint(0.1);
+
+    addAndMakeVisible(decayLabel);
+    decayLabel.setText("Decay", juce::dontSendNotification);
+    decayLabel.setJustificationType(juce::Justification::centredTop);
+    decayLabel.attachToComponent(&decaySlider, false);
+
+    decayAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "decay", decaySlider);
+
+    // Sustain
+    addAndMakeVisible(sustainSlider);
+    sustainSlider.setSliderStyle(juce::Slider::LinearVertical);
+    sustainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    sustainSlider.setRange(0.0, 1.0, 0.01);
+    sustainSlider.setValue(0.7);
+    sustainSlider.setTextValueSuffix(" %");
+
+    addAndMakeVisible(sustainLabel);
+    sustainLabel.setText("Sustain", juce::dontSendNotification);
+    sustainLabel.setJustificationType(juce::Justification::centredTop);
+    sustainLabel.attachToComponent(&sustainSlider, false);
+
+    sustainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "sustain", sustainSlider);
+
+    // Release
+    addAndMakeVisible(releaseSlider);
+    releaseSlider.setSliderStyle(juce::Slider::LinearVertical);
+    releaseSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    releaseSlider.setRange(0.001, 5.0, 0.001);
+    releaseSlider.setValue(0.5);
+    releaseSlider.setTextValueSuffix(" s");
+    releaseSlider.setSkewFactorFromMidPoint(0.2);
+
+    addAndMakeVisible(releaseLabel);
+    releaseLabel.setText("Release", juce::dontSendNotification);
+    releaseLabel.setJustificationType(juce::Justification::centredTop);
+    releaseLabel.attachToComponent(&releaseSlider, false);
+
+    releaseAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "release", releaseSlider);
+
     // Add virtual MIDI keyboard
     addAndMakeVisible(midiKeyboard);
 
@@ -64,7 +132,7 @@ void CLEMMY3AudioProcessorEditor::paint(juce::Graphics& g)
     // Draw subtitle
     g.setFont(14.0f);
     g.setColour(juce::Colours::lightgrey);
-    g.drawFittedText("Phase 1: Single Oscillator Engine", getLocalBounds().removeFromTop(80), juce::Justification::centred, 1);
+    g.drawFittedText("Phase 2: ADSR Envelope", getLocalBounds().removeFromTop(80), juce::Justification::centred, 1);
 }
 
 void CLEMMY3AudioProcessorEditor::resized()
@@ -74,21 +142,50 @@ void CLEMMY3AudioProcessorEditor::resized()
     // Title area
     area.removeFromTop(60);
 
-    // Controls area
-    auto controlsArea = area.removeFromTop(100);
-    controlsArea.reduce(20, 10);
+    // Oscillator controls area (left side)
+    auto topControls = area.removeFromTop(170);
+    auto oscArea = topControls.removeFromLeft(400);
+    oscArea.reduce(20, 10);
 
     // Waveform selector
-    auto waveformArea = controlsArea.removeFromTop(30);
+    auto waveformArea = oscArea.removeFromTop(30);
     waveformArea.removeFromLeft(100); // Space for label
     waveformSelector.setBounds(waveformArea);
 
-    controlsArea.removeFromTop(10); // Spacing
+    oscArea.removeFromTop(10); // Spacing
 
     // Pulse width slider
-    auto pwArea = controlsArea.removeFromTop(30);
+    auto pwArea = oscArea.removeFromTop(30);
     pwArea.removeFromLeft(100); // Space for label
     pulseWidthSlider.setBounds(pwArea);
+
+    // ADSR envelope controls (right side)
+    auto adsrArea = topControls.reduced(10, 10);
+    int sliderWidth = 80;
+    int spacing = 10;
+
+    // Layout four vertical sliders in a row
+    auto attackArea = adsrArea.removeFromLeft(sliderWidth);
+    attackArea.removeFromTop(20); // Space for label
+    attackSlider.setBounds(attackArea);
+
+    adsrArea.removeFromLeft(spacing);
+
+    auto decayArea = adsrArea.removeFromLeft(sliderWidth);
+    decayArea.removeFromTop(20);
+    decaySlider.setBounds(decayArea);
+
+    adsrArea.removeFromLeft(spacing);
+
+    auto sustainArea = adsrArea.removeFromLeft(sliderWidth);
+    sustainArea.removeFromTop(20);
+    sustainSlider.setBounds(sustainArea);
+
+    adsrArea.removeFromLeft(spacing);
+
+    auto releaseArea = adsrArea.removeFromLeft(sliderWidth);
+    releaseArea.removeFromTop(20);
+    releaseSlider.setBounds(releaseArea);
 
     // Virtual MIDI keyboard at bottom
     auto keyboardArea = area.reduced(10, 10);

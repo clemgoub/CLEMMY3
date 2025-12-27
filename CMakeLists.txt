@@ -24,7 +24,8 @@ target_sources(CLEMMY3
     PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
-        Source/DSP/Oscillator.cpp)
+        Source/DSP/Oscillator.cpp
+        Source/DSP/Envelope.cpp)
 
 # Add compile definitions
 target_compile_definitions(CLEMMY3

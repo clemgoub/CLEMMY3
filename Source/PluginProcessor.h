@@ -2,11 +2,12 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "DSP/Oscillator.h"
+#include "DSP/Envelope.h"
 
 //==============================================================================
 /**
     CLEMMY3 - Triple Oscillator Synthesizer
-    Phase 1: Single oscillator engine with PolyBLEP anti-aliasing
+    Phase 2: ADSR Envelope Generator
 */
 class CLEMMY3AudioProcessor : public juce::AudioProcessor
 {
@@ -58,9 +59,9 @@ public:
 private:
     juce::MidiKeyboardState keyboardState;
     //==============================================================================
-    // Phase 1: Real oscillator with multiple waveforms
+    // Phase 2: Oscillator + Envelope
     Oscillator oscillator;
-    bool noteIsOn = false;
+    Envelope envelope;
     int currentMidiNote = -1;
 
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();

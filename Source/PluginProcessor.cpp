@@ -43,6 +43,31 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::NormalisableRange<float>(0.01f, 0.99f, 0.01f),
         0.5f));  // Default: 50%
 
+    // ADSR Envelope parameters
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "attack",
+        "Attack",
+        juce::NormalisableRange<float>(0.001f, 2.0f, 0.001f, 0.3f),  // Skewed for better control
+        0.01f));  // Default: 10ms
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "decay",
+        "Decay",
+        juce::NormalisableRange<float>(0.001f, 2.0f, 0.001f, 0.3f),
+        0.3f));  // Default: 300ms
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "sustain",
+        "Sustain",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.7f));  // Default: 70%
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "release",
+        "Release",
+        juce::NormalisableRange<float>(0.001f, 5.0f, 0.001f, 0.3f),
+        0.5f));  // Default: 500ms
+
     return { params.begin(), params.end() };
 }
 
@@ -110,11 +135,11 @@ void CLEMMY3AudioProcessor::changeProgramName(int, const juce::String&)
 //==============================================================================
 void CLEMMY3AudioProcessor::prepareToPlay(double sampleRate, int)
 {
-    // Initialize oscillator with sample rate
+    // Initialize DSP components with sample rate
     oscillator.setSampleRate(sampleRate);
+    envelope.setSampleRate(sampleRate);
 
     // Reset state
-    noteIsOn = false;
     currentMidiNote = -1;
 }
 
@@ -165,10 +190,17 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // Get current parameter values
     int waveformIndex = parameters.getRawParameterValue("waveform")->load();
     float pulseWidth = parameters.getRawParameterValue("pulseWidth")->load();
+    float attack = parameters.getRawParameterValue("attack")->load();
+    float decay = parameters.getRawParameterValue("decay")->load();
+    float sustain = parameters.getRawParameterValue("sustain")->load();
+    float release = parameters.getRawParameterValue("release")->load();
 
     // Update oscillator parameters
     oscillator.setWaveform(static_cast<Oscillator::Waveform>(waveformIndex));
     oscillator.setPulseWidth(pulseWidth);
+
+    // Update envelope parameters
+    envelope.setParameters(attack, decay, sustain, release);
 
     // Process MIDI messages (from both sources)
     for (const auto metadata : combinedMidi)
@@ -180,36 +212,37 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             currentMidiNote = message.getNoteNumber();
             float frequency = AudioUtils::midiNoteToFrequency(currentMidiNote);
             oscillator.setFrequency(frequency);
-            noteIsOn = true;
+
+            // Trigger envelope with velocity
+            float velocity = message.getFloatVelocity();
+            envelope.noteOn(velocity);
         }
         else if (message.isNoteOff())
         {
             if (message.getNoteNumber() == currentMidiNote)
             {
-                noteIsOn = false;
+                // Release envelope
+                envelope.noteOff();
                 currentMidiNote = -1;
             }
         }
     }
 
     // Generate audio samples
-    if (noteIsOn)
+    for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-        {
-            float oscSample = oscillator.processSample();
+        // Generate oscillator sample
+        float oscSample = oscillator.processSample();
 
-            // Output to all channels
-            for (int channel = 0; channel < totalNumOutputChannels; ++channel)
-            {
-                buffer.setSample(channel, sample, oscSample * 0.3f);
-            }
+        // Apply envelope
+        float envLevel = envelope.processSample();
+        float output = oscSample * envLevel * 0.3f;
+
+        // Output to all channels
+        for (int channel = 0; channel < totalNumOutputChannels; ++channel)
+        {
+            buffer.setSample(channel, sample, output);
         }
-    }
-    else
-    {
-        // No note playing, output silence
-        buffer.clear();
     }
 }
 
