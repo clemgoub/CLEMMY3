@@ -154,6 +154,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
         0.0f));  // Default: 0%
 
+    // ==================== MASTER VOLUME ====================
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "masterVolume", "Master Volume",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.8f));  // Default: 80%
+
     return { params.begin(), params.end() };
 }
 
@@ -360,11 +366,14 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         }
     }
 
+    // Read master volume parameter
+    float masterVolume = parameters.getRawParameterValue("masterVolume")->load();
+
     // Generate audio samples from voice manager
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
         // Get mixed output from all active voices
-        float output = voiceManager.processSample() * 0.3f;
+        float output = voiceManager.processSample() * 0.3f * masterVolume;
 
         // Output to all channels
         for (int channel = 0; channel < totalNumOutputChannels; ++channel)
