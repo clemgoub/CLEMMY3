@@ -8,7 +8,13 @@ Voice::Voice()
 
 void Voice::setSampleRate(double newSampleRate)
 {
-    oscillator.setSampleRate(newSampleRate);
+    // Initialize all oscillators with sample rate
+    for (auto& osc : oscillators)
+    {
+        osc.setSampleRate(newSampleRate);
+    }
+
+    noiseGenerator.setSampleRate(newSampleRate);
     envelope.setSampleRate(newSampleRate);
 }
 
@@ -17,15 +23,16 @@ void Voice::noteOn(int midiNote, float velocity, float detune)
     currentMidiNote = midiNote;
     unisonDetune = detune;
 
-    // Reset oscillator phase for clean waveform start
-    // This prevents frequency discontinuities when note changes
-    oscillator.reset();
+    // Reset oscillator phases for clean waveform start
+    for (auto& osc : oscillators)
+    {
+        osc.reset();
+    }
 
-    // Update oscillator frequency with detune
-    updateFrequency();
+    // Update all oscillator frequencies with new note
+    updateOscillatorFrequencies();
 
     // Trigger envelope with velocity
-    // Envelope starts from current level for smooth retriggering
     envelope.noteOn(velocity);
 
     // Reset age for voice stealing
@@ -36,15 +43,18 @@ void Voice::noteOff()
 {
     // Release envelope (voice continues sounding until release phase completes)
     envelope.noteOff();
-
-    // Note: currentMidiNote stays set until voice goes idle
-    // This allows proper voice allocation for retriggering
 }
 
 void Voice::reset()
 {
-    // Reset oscillator phase to 0 for clean start
-    oscillator.reset();
+    // Reset all oscillators
+    for (auto& osc : oscillators)
+    {
+        osc.reset();
+    }
+
+    // Reset noise generator
+    noiseGenerator.reset();
 
     // Reset envelope to idle state
     envelope.reset();
@@ -55,27 +65,101 @@ void Voice::reset()
     unisonDetune = 0.0f;
 }
 
-void Voice::setOscillatorWaveform(Oscillator::Waveform waveform)
+//==============================================================================
+// Per-Oscillator Parameter Updates
+//==============================================================================
+
+void Voice::setOscillatorEnabled(int oscIndex, bool enabled)
 {
-    oscillator.setWaveform(waveform);
+    if (oscIndex >= 0 && oscIndex < NUM_OSCILLATORS)
+    {
+        oscSettings[oscIndex].enabled = enabled;
+    }
 }
 
-void Voice::setOscillatorPulseWidth(float pw)
+void Voice::setOscillatorWaveform(int oscIndex, Oscillator::Waveform waveform)
 {
-    oscillator.setPulseWidth(pw);
+    if (oscIndex >= 0 && oscIndex < NUM_OSCILLATORS)
+    {
+        oscillators[oscIndex].setWaveform(waveform);
+    }
 }
+
+void Voice::setOscillatorGain(int oscIndex, float gain)
+{
+    if (oscIndex >= 0 && oscIndex < NUM_OSCILLATORS)
+    {
+        oscSettings[oscIndex].gain = AudioUtils::clamp(gain, 0.0f, 1.0f);
+    }
+}
+
+void Voice::setOscillatorDetune(int oscIndex, float cents)
+{
+    if (oscIndex >= 0 && oscIndex < NUM_OSCILLATORS)
+    {
+        oscSettings[oscIndex].detuneCents = AudioUtils::clamp(cents, -100.0f, 100.0f);
+        updateOscillatorFrequencies();
+    }
+}
+
+void Voice::setOscillatorOctave(int oscIndex, int octaveOffset)
+{
+    if (oscIndex >= 0 && oscIndex < NUM_OSCILLATORS)
+    {
+        oscSettings[oscIndex].octaveOffset = AudioUtils::clamp(octaveOffset, -3, 3);
+        updateOscillatorFrequencies();
+    }
+}
+
+void Voice::setOscillatorPulseWidth(int oscIndex, float pw)
+{
+    if (oscIndex >= 0 && oscIndex < NUM_OSCILLATORS)
+    {
+        oscillators[oscIndex].setPulseWidth(pw);
+    }
+}
+
+//==============================================================================
+// Noise Parameter Updates
+//==============================================================================
+
+void Voice::setNoiseEnabled(bool enabled)
+{
+    noiseEnabled = enabled;
+}
+
+void Voice::setNoiseType(NoiseGenerator::NoiseType type)
+{
+    noiseGenerator.setNoiseType(type);
+}
+
+void Voice::setNoiseGain(float gain)
+{
+    noiseGain = AudioUtils::clamp(gain, 0.0f, 1.0f);
+}
+
+//==============================================================================
+// Envelope Parameters
+//==============================================================================
 
 void Voice::setEnvelopeParameters(float attack, float decay, float sustain, float release)
 {
     envelope.setParameters(attack, decay, sustain, release);
 }
 
+//==============================================================================
+// Audio Processing
+//==============================================================================
+
 float Voice::processSample()
 {
-    // Generate oscillator sample
-    float oscSample = oscillator.processSample();
+    if (!isActive())
+        return 0.0f;
 
-    // Apply envelope
+    // Mix all enabled oscillators + noise (post-mixer architecture)
+    float mix = mixOscillators();
+
+    // Apply single envelope to mixed signal
     float envLevel = envelope.processSample();
 
     // If envelope has finished (idle), mark voice as free
@@ -84,8 +168,67 @@ float Voice::processSample()
         currentMidiNote = -1;
     }
 
-    return oscSample * envLevel;
+    return mix * envLevel;
 }
+
+float Voice::mixOscillators()
+{
+    float sum = 0.0f;
+
+    // Mix all enabled oscillators with their individual gains
+    for (int i = 0; i < NUM_OSCILLATORS; ++i)
+    {
+        if (oscSettings[i].enabled)
+        {
+            float oscSample = oscillators[i].processSample();
+            sum += oscSample * oscSettings[i].gain;
+        }
+    }
+
+    // Mix noise if enabled (like a 4th oscillator)
+    if (noiseEnabled)
+    {
+        float noiseSample = noiseGenerator.processSample();
+        sum += noiseSample * noiseGain;
+    }
+
+    return sum;
+}
+
+//==============================================================================
+// Frequency Calculation
+//==============================================================================
+
+void Voice::updateOscillatorFrequencies()
+{
+    if (currentMidiNote < 0)
+        return;
+
+    // Calculate base frequency from MIDI note
+    float baseFreq = AudioUtils::midiNoteToFrequency(currentMidiNote);
+
+    // Update each oscillator with its own octave offset and detune
+    for (int i = 0; i < NUM_OSCILLATORS; ++i)
+    {
+        // Apply octave offset (multiply by 2^octave)
+        // -3 octaves = ×1/8, +3 octaves = ×8
+        float octaveMultiplier = std::pow(2.0f, static_cast<float>(oscSettings[i].octaveOffset));
+
+        // Apply oscillator detune + unison detune (in cents)
+        // 1200 cents = 1 octave
+        float totalDetuneCents = oscSettings[i].detuneCents + unisonDetune;
+        float detuneMultiplier = std::pow(2.0f, totalDetuneCents / 1200.0f);
+
+        // Calculate final frequency
+        float finalFreq = baseFreq * octaveMultiplier * detuneMultiplier;
+
+        oscillators[i].setFrequency(finalFreq);
+    }
+}
+
+//==============================================================================
+// Voice State Queries
+//==============================================================================
 
 bool Voice::isActive() const
 {
@@ -95,30 +238,10 @@ bool Voice::isActive() const
 
 bool Voice::isSounding() const
 {
-    // Voice is producing audible output if envelope is active
-    // Prefer stealing voices in release phase over attack/decay/sustain
+    // Voice is producing audible output if envelope is active and not in release
     if (!envelope.isActive())
         return false;
 
     // Voices in release phase are better candidates for stealing
     return envelope.getCurrentPhase() != Envelope::Phase::Release;
-}
-
-void Voice::updateFrequency()
-{
-    if (currentMidiNote < 0)
-        return;
-
-    // Calculate base frequency from MIDI note
-    float baseFrequency = AudioUtils::midiNoteToFrequency(currentMidiNote);
-
-    // Apply unison detuning (in cents)
-    // Formula: freq * 2^(cents/1200)
-    if (unisonDetune != 0.0f)
-    {
-        float detuneFactor = std::pow(2.0f, unisonDetune / 1200.0f);
-        baseFrequency *= detuneFactor;
-    }
-
-    oscillator.setFrequency(baseFrequency);
 }

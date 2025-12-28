@@ -27,7 +27,8 @@ target_sources(CLEMMY3
         Source/DSP/Oscillator.cpp
         Source/DSP/Envelope.cpp
         Source/DSP/Voice.cpp
-        Source/DSP/VoiceManager.cpp)
+        Source/DSP/VoiceManager.cpp
+        Source/DSP/NoiseGenerator.cpp)
 
 # Add compile definitions
 target_compile_definitions(CLEMMY3

@@ -42,10 +42,25 @@ public:
     void allSoundOff();     // Immediate silence
 
     /**
-     * Parameter broadcasting to all voices
+     * Per-oscillator parameter broadcasting
      */
-    void setOscillatorWaveform(Oscillator::Waveform waveform);
-    void setOscillatorPulseWidth(float pw);
+    void setOscillatorEnabled(int oscIndex, bool enabled);
+    void setOscillatorWaveform(int oscIndex, Oscillator::Waveform waveform);
+    void setOscillatorGain(int oscIndex, float gain);
+    void setOscillatorDetune(int oscIndex, float cents);
+    void setOscillatorOctave(int oscIndex, int octaveOffset);
+    void setOscillatorPulseWidth(int oscIndex, float pw);
+
+    /**
+     * Noise parameters (per-voice, controlled by envelope)
+     */
+    void setNoiseEnabled(bool enabled);
+    void setNoiseType(NoiseGenerator::NoiseType type);
+    void setNoiseGain(float gain);
+
+    /**
+     * Envelope parameters (shared by all voices)
+     */
     void setEnvelopeParameters(float attack, float decay, float sustain, float release);
 
     /**

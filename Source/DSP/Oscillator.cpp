@@ -1,6 +1,5 @@
 #include "Oscillator.h"
 #include <cmath>
-#include <cstdlib>  // for std::rand()
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
@@ -62,17 +61,10 @@ float Oscillator::processSample()
         case Waveform::Triangle:
             sample = generateTriangle();
             break;
-
-        case Waveform::Noise:
-            sample = generateNoise();
-            break;
     }
 
-    // Advance phase (except for noise which is phase-independent)
-    if (waveform != Waveform::Noise)
-    {
-        phase += phaseIncrement;
-    }
+    // Advance phase
+    phase += phaseIncrement;
 
     // Wrap phase to 0.0-1.0 range
     AudioUtils::wrapPhase(phase);
@@ -162,11 +154,4 @@ float Oscillator::generateTriangle()
     polyBlepCorrection -= AudioUtils::polyBLEP(phase, phaseIncrement) * 4.0f * phaseIncrement;
 
     return naiveTriangle + polyBlepCorrection;
-}
-
-float Oscillator::generateNoise()
-{
-    // White noise: random values between -1 and +1
-    // Frequency-independent, no phase tracking needed
-    return (static_cast<float>(std::rand()) / RAND_MAX) * 2.0f - 1.0f;
 }

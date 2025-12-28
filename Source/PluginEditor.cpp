@@ -6,8 +6,8 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     : AudioProcessorEditor(&p), audioProcessor(p),
       midiKeyboard(audioProcessor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard)
 {
-    // Set editor size to accommodate ADSR controls and keyboard
-    setSize(800, 380);
+    // Set editor size - Phase 4 minimal GUI
+    setSize(600, 300);
 
     // Add voice mode selector
     addAndMakeVisible(voiceModeSelector);
@@ -22,38 +22,6 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
 
     voiceModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.parameters, "voiceMode", voiceModeSelector);
-
-    // Add waveform selector
-    addAndMakeVisible(waveformSelector);
-    waveformSelector.addItem("Sine", 1);
-    waveformSelector.addItem("Sawtooth", 2);
-    waveformSelector.addItem("Square", 3);
-    waveformSelector.addItem("Triangle", 4);
-    waveformSelector.addItem("Noise", 5);
-    waveformSelector.setSelectedId(1);
-    waveformSelector.onChange = [this] { waveformChanged(); };
-
-    addAndMakeVisible(waveformLabel);
-    waveformLabel.setText("Waveform", juce::dontSendNotification);
-    waveformLabel.attachToComponent(&waveformSelector, true);
-
-    // Add pulse width slider
-    addAndMakeVisible(pulseWidthSlider);
-    pulseWidthSlider.setRange(0.01, 0.99, 0.01);
-    pulseWidthSlider.setValue(0.5);
-    pulseWidthSlider.setTextValueSuffix("%");
-    pulseWidthSlider.onValueChange = [this] { pulseWidthChanged(); };
-
-    addAndMakeVisible(pulseWidthLabel);
-    pulseWidthLabel.setText("Pulse Width", juce::dontSendNotification);
-    pulseWidthLabel.attachToComponent(&pulseWidthSlider, true);
-
-    // Attach to parameters
-    waveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
-        audioProcessor.parameters, "waveform", waveformSelector);
-
-    pulseWidthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        audioProcessor.parameters, "pulseWidth", pulseWidthSlider);
 
     // Add ADSR envelope controls
     // Attack
@@ -148,7 +116,7 @@ void CLEMMY3AudioProcessorEditor::paint(juce::Graphics& g)
     // Draw subtitle
     g.setFont(14.0f);
     g.setColour(juce::Colours::lightgrey);
-    g.drawFittedText("Phase 3: Polyphony", getLocalBounds().removeFromTop(80), juce::Justification::centred, 1);
+    g.drawFittedText("Phase 4: Triple Oscillator Architecture", getLocalBounds().removeFromTop(80), juce::Justification::centred, 1);
 }
 
 void CLEMMY3AudioProcessorEditor::resized()
@@ -158,38 +126,23 @@ void CLEMMY3AudioProcessorEditor::resized()
     // Title area
     area.removeFromTop(60);
 
-    // Oscillator controls area (left side)
-    auto topControls = area.removeFromTop(170);
-    auto oscArea = topControls.removeFromLeft(400);
-    oscArea.reduce(20, 10);
+    // Top controls
+    auto topArea = area.removeFromTop(40);
+    topArea.reduce(20, 5);
 
     // Voice mode selector
-    auto voiceModeArea = oscArea.removeFromTop(30);
+    auto voiceModeArea = topArea.removeFromTop(30);
     voiceModeArea.removeFromLeft(100); // Space for label
-    voiceModeSelector.setBounds(voiceModeArea);
+    voiceModeSelector.setBounds(voiceModeArea.removeFromLeft(150));
 
-    oscArea.removeFromTop(10); // Spacing
+    // ADSR envelope controls (horizontal layout)
+    auto adsrArea = area.removeFromTop(150);
+    adsrArea.reduce(20, 10);
+    int sliderWidth = 100;
+    int spacing = 20;
 
-    // Waveform selector
-    auto waveformArea = oscArea.removeFromTop(30);
-    waveformArea.removeFromLeft(100); // Space for label
-    waveformSelector.setBounds(waveformArea);
-
-    oscArea.removeFromTop(10); // Spacing
-
-    // Pulse width slider
-    auto pwArea = oscArea.removeFromTop(30);
-    pwArea.removeFromLeft(100); // Space for label
-    pulseWidthSlider.setBounds(pwArea);
-
-    // ADSR envelope controls (right side)
-    auto adsrArea = topControls.reduced(10, 10);
-    int sliderWidth = 80;
-    int spacing = 10;
-
-    // Layout four vertical sliders in a row
     auto attackArea = adsrArea.removeFromLeft(sliderWidth);
-    attackArea.removeFromTop(20); // Space for label
+    attackArea.removeFromTop(20);
     attackSlider.setBounds(attackArea);
 
     adsrArea.removeFromLeft(spacing);
@@ -211,16 +164,6 @@ void CLEMMY3AudioProcessorEditor::resized()
     releaseSlider.setBounds(releaseArea);
 
     // Virtual MIDI keyboard at bottom
-    auto keyboardArea = area.reduced(10, 10);
+    auto keyboardArea = area.reduced(10, 5);
     midiKeyboard.setBounds(keyboardArea);
-}
-
-void CLEMMY3AudioProcessorEditor::waveformChanged()
-{
-    // Attachment handles parameter updates automatically
-}
-
-void CLEMMY3AudioProcessorEditor::pulseWidthChanged()
-{
-    // Attachment handles parameter updates automatically
 }

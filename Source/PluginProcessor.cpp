@@ -35,44 +35,124 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::StringArray{"Mono", "Poly", "Unison"},
         1));  // Default: Poly
 
-    // Waveform parameter (Sine=0, Sawtooth=1, Square=2, Triangle=3, Noise=4)
+    // ==================== OSCILLATOR 1 PARAMETERS ====================
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        "osc1Enabled", "Osc 1 Enabled", true));
+
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
-        "waveform",
-        "Waveform",
-        juce::StringArray{"Sine", "Sawtooth", "Square", "Triangle", "Noise"},
+        "osc1Waveform", "Osc 1 Waveform",
+        juce::StringArray{"Sine", "Sawtooth", "Square", "Triangle"},
         0));  // Default: Sine
 
-    // Pulse Width parameter (for Square wave)
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "pulseWidth",
-        "Pulse Width",
+        "osc1Gain", "Osc 1 Gain",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.33f));  // Default: 33%
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc1Detune", "Osc 1 Detune",
+        juce::NormalisableRange<float>(-100.0f, 100.0f, 0.1f),
+        0.0f));  // Default: 0 cents
+
+    params.push_back(std::make_unique<juce::AudioParameterInt>(
+        "osc1Octave", "Osc 1 Octave",
+        -3, 3, 0));  // Default: 0 octaves
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc1PW", "Osc 1 Pulse Width",
         juce::NormalisableRange<float>(0.01f, 0.99f, 0.01f),
         0.5f));  // Default: 50%
 
-    // ADSR Envelope parameters
+    // ==================== OSCILLATOR 2 PARAMETERS ====================
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        "osc2Enabled", "Osc 2 Enabled", true));
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "osc2Waveform", "Osc 2 Waveform",
+        juce::StringArray{"Sine", "Sawtooth", "Square", "Triangle"},
+        1));  // Default: Sawtooth
+
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "attack",
-        "Attack",
-        juce::NormalisableRange<float>(0.001f, 2.0f, 0.001f, 0.3f),  // Skewed for better control
+        "osc2Gain", "Osc 2 Gain",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.33f));  // Default: 33%
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc2Detune", "Osc 2 Detune",
+        juce::NormalisableRange<float>(-100.0f, 100.0f, 0.1f),
+        0.0f));  // Default: 0 cents
+
+    params.push_back(std::make_unique<juce::AudioParameterInt>(
+        "osc2Octave", "Osc 2 Octave",
+        -3, 3, 0));  // Default: 0 octaves
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc2PW", "Osc 2 Pulse Width",
+        juce::NormalisableRange<float>(0.01f, 0.99f, 0.01f),
+        0.5f));  // Default: 50%
+
+    // ==================== OSCILLATOR 3 PARAMETERS ====================
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        "osc3Enabled", "Osc 3 Enabled", true));
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "osc3Waveform", "Osc 3 Waveform",
+        juce::StringArray{"Sine", "Sawtooth", "Square", "Triangle"},
+        2));  // Default: Square
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc3Gain", "Osc 3 Gain",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.33f));  // Default: 33%
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc3Detune", "Osc 3 Detune",
+        juce::NormalisableRange<float>(-100.0f, 100.0f, 0.1f),
+        0.0f));  // Default: 0 cents
+
+    params.push_back(std::make_unique<juce::AudioParameterInt>(
+        "osc3Octave", "Osc 3 Octave",
+        -3, 3, 0));  // Default: 0 octaves
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc3PW", "Osc 3 Pulse Width",
+        juce::NormalisableRange<float>(0.01f, 0.99f, 0.01f),
+        0.5f));  // Default: 50%
+
+    // ==================== ADSR ENVELOPE PARAMETERS ====================
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "attack", "Attack",
+        juce::NormalisableRange<float>(0.001f, 2.0f, 0.001f, 0.3f),
         0.01f));  // Default: 10ms
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "decay",
-        "Decay",
+        "decay", "Decay",
         juce::NormalisableRange<float>(0.001f, 2.0f, 0.001f, 0.3f),
         0.3f));  // Default: 300ms
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "sustain",
-        "Sustain",
+        "sustain", "Sustain",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
         0.7f));  // Default: 70%
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        "release",
-        "Release",
+        "release", "Release",
         juce::NormalisableRange<float>(0.001f, 5.0f, 0.001f, 0.3f),
         0.5f));  // Default: 500ms
+
+    // ==================== NOISE PARAMETERS ====================
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        "noiseEnabled", "Noise Enabled", false));  // Default: OFF
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "noiseType", "Noise Type",
+        juce::StringArray{"White", "Pink", "Brown"},
+        0));  // Default: White
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "noiseGain", "Noise Gain",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f));  // Default: 0%
 
     return { params.begin(), params.end() };
 }
@@ -191,20 +271,76 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     // Get current parameter values
     int voiceModeIndex = parameters.getRawParameterValue("voiceMode")->load();
-    int waveformIndex = parameters.getRawParameterValue("waveform")->load();
-    float pulseWidth = parameters.getRawParameterValue("pulseWidth")->load();
+
+    // Oscillator 1 parameters
+    bool osc1Enabled = parameters.getRawParameterValue("osc1Enabled")->load() > 0.5f;
+    int osc1Waveform = parameters.getRawParameterValue("osc1Waveform")->load();
+    float osc1Gain = parameters.getRawParameterValue("osc1Gain")->load();
+    float osc1Detune = parameters.getRawParameterValue("osc1Detune")->load();
+    int osc1Octave = static_cast<int>(parameters.getRawParameterValue("osc1Octave")->load());
+    float osc1PW = parameters.getRawParameterValue("osc1PW")->load();
+
+    // Oscillator 2 parameters
+    bool osc2Enabled = parameters.getRawParameterValue("osc2Enabled")->load() > 0.5f;
+    int osc2Waveform = parameters.getRawParameterValue("osc2Waveform")->load();
+    float osc2Gain = parameters.getRawParameterValue("osc2Gain")->load();
+    float osc2Detune = parameters.getRawParameterValue("osc2Detune")->load();
+    int osc2Octave = static_cast<int>(parameters.getRawParameterValue("osc2Octave")->load());
+    float osc2PW = parameters.getRawParameterValue("osc2PW")->load();
+
+    // Oscillator 3 parameters
+    bool osc3Enabled = parameters.getRawParameterValue("osc3Enabled")->load() > 0.5f;
+    int osc3Waveform = parameters.getRawParameterValue("osc3Waveform")->load();
+    float osc3Gain = parameters.getRawParameterValue("osc3Gain")->load();
+    float osc3Detune = parameters.getRawParameterValue("osc3Detune")->load();
+    int osc3Octave = static_cast<int>(parameters.getRawParameterValue("osc3Octave")->load());
+    float osc3PW = parameters.getRawParameterValue("osc3PW")->load();
+
+    // ADSR Envelope parameters
     float attack = parameters.getRawParameterValue("attack")->load();
     float decay = parameters.getRawParameterValue("decay")->load();
     float sustain = parameters.getRawParameterValue("sustain")->load();
     float release = parameters.getRawParameterValue("release")->load();
 
+    // Noise parameters
+    bool noiseEnabled = parameters.getRawParameterValue("noiseEnabled")->load() > 0.5f;
+    int noiseTypeIndex = parameters.getRawParameterValue("noiseType")->load();
+    float noiseGain = parameters.getRawParameterValue("noiseGain")->load();
+
     // Update voice manager mode
     voiceManager.setVoiceMode(static_cast<VoiceManager::VoiceMode>(voiceModeIndex));
 
-    // Broadcast parameters to all voices
-    voiceManager.setOscillatorWaveform(static_cast<Oscillator::Waveform>(waveformIndex));
-    voiceManager.setOscillatorPulseWidth(pulseWidth);
+    // Broadcast oscillator 1 parameters to all voices
+    voiceManager.setOscillatorEnabled(0, osc1Enabled);
+    voiceManager.setOscillatorWaveform(0, static_cast<Oscillator::Waveform>(osc1Waveform));
+    voiceManager.setOscillatorGain(0, osc1Gain);
+    voiceManager.setOscillatorDetune(0, osc1Detune);
+    voiceManager.setOscillatorOctave(0, osc1Octave);
+    voiceManager.setOscillatorPulseWidth(0, osc1PW);
+
+    // Broadcast oscillator 2 parameters to all voices
+    voiceManager.setOscillatorEnabled(1, osc2Enabled);
+    voiceManager.setOscillatorWaveform(1, static_cast<Oscillator::Waveform>(osc2Waveform));
+    voiceManager.setOscillatorGain(1, osc2Gain);
+    voiceManager.setOscillatorDetune(1, osc2Detune);
+    voiceManager.setOscillatorOctave(1, osc2Octave);
+    voiceManager.setOscillatorPulseWidth(1, osc2PW);
+
+    // Broadcast oscillator 3 parameters to all voices
+    voiceManager.setOscillatorEnabled(2, osc3Enabled);
+    voiceManager.setOscillatorWaveform(2, static_cast<Oscillator::Waveform>(osc3Waveform));
+    voiceManager.setOscillatorGain(2, osc3Gain);
+    voiceManager.setOscillatorDetune(2, osc3Detune);
+    voiceManager.setOscillatorOctave(2, osc3Octave);
+    voiceManager.setOscillatorPulseWidth(2, osc3PW);
+
+    // Broadcast envelope parameters
     voiceManager.setEnvelopeParameters(attack, decay, sustain, release);
+
+    // Broadcast noise parameters
+    voiceManager.setNoiseEnabled(noiseEnabled);
+    voiceManager.setNoiseType(static_cast<NoiseGenerator::NoiseType>(noiseTypeIndex));
+    voiceManager.setNoiseGain(noiseGain);
 
     // Process MIDI messages (from both sources)
     for (const auto metadata : combinedMidi)

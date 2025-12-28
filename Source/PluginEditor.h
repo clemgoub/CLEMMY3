@@ -25,10 +25,6 @@ private:
     // UI Components
     juce::ComboBox voiceModeSelector;
     juce::Label voiceModeLabel;
-    juce::ComboBox waveformSelector;
-    juce::Label waveformLabel;
-    juce::Slider pulseWidthSlider;
-    juce::Label pulseWidthLabel;
 
     // ADSR Envelope controls
     juce::Slider attackSlider;
@@ -45,16 +41,10 @@ private:
 
     // Parameter attachments
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> voiceModeAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pulseWidthAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sustainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> releaseAttachment;
-
-    // Callbacks
-    void waveformChanged();
-    void pulseWidthChanged();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CLEMMY3AudioProcessorEditor)
 };

@@ -80,23 +80,89 @@ void VoiceManager::allSoundOff()
     }
 }
 
-void VoiceManager::setOscillatorWaveform(Oscillator::Waveform waveform)
+//==============================================================================
+// Per-Oscillator Parameter Broadcasting
+//==============================================================================
+
+void VoiceManager::setOscillatorEnabled(int oscIndex, bool enabled)
 {
-    // Broadcast to all voices
     for (auto& voice : voices)
     {
-        voice.setOscillatorWaveform(waveform);
+        voice.setOscillatorEnabled(oscIndex, enabled);
     }
 }
 
-void VoiceManager::setOscillatorPulseWidth(float pw)
+void VoiceManager::setOscillatorWaveform(int oscIndex, Oscillator::Waveform waveform)
 {
-    // Broadcast to all voices
     for (auto& voice : voices)
     {
-        voice.setOscillatorPulseWidth(pw);
+        voice.setOscillatorWaveform(oscIndex, waveform);
     }
 }
+
+void VoiceManager::setOscillatorGain(int oscIndex, float gain)
+{
+    for (auto& voice : voices)
+    {
+        voice.setOscillatorGain(oscIndex, gain);
+    }
+}
+
+void VoiceManager::setOscillatorDetune(int oscIndex, float cents)
+{
+    for (auto& voice : voices)
+    {
+        voice.setOscillatorDetune(oscIndex, cents);
+    }
+}
+
+void VoiceManager::setOscillatorOctave(int oscIndex, int octaveOffset)
+{
+    for (auto& voice : voices)
+    {
+        voice.setOscillatorOctave(oscIndex, octaveOffset);
+    }
+}
+
+void VoiceManager::setOscillatorPulseWidth(int oscIndex, float pw)
+{
+    for (auto& voice : voices)
+    {
+        voice.setOscillatorPulseWidth(oscIndex, pw);
+    }
+}
+
+//==============================================================================
+// Noise Parameter Broadcasting
+//==============================================================================
+
+void VoiceManager::setNoiseEnabled(bool enabled)
+{
+    for (auto& voice : voices)
+    {
+        voice.setNoiseEnabled(enabled);
+    }
+}
+
+void VoiceManager::setNoiseType(NoiseGenerator::NoiseType type)
+{
+    for (auto& voice : voices)
+    {
+        voice.setNoiseType(type);
+    }
+}
+
+void VoiceManager::setNoiseGain(float gain)
+{
+    for (auto& voice : voices)
+    {
+        voice.setNoiseGain(gain);
+    }
+}
+
+//==============================================================================
+// Envelope Parameters
+//==============================================================================
 
 void VoiceManager::setEnvelopeParameters(float attack, float decay, float sustain, float release)
 {
@@ -107,12 +173,17 @@ void VoiceManager::setEnvelopeParameters(float attack, float decay, float sustai
     }
 }
 
+//==============================================================================
+// Audio Generation
+//==============================================================================
+
 float VoiceManager::processSample()
 {
     float output = 0.0f;
     int activeCount = 0;
 
     // Sum output from all active voices
+    // Each voice now handles its own 3 oscillators + noise mixing with envelope
     for (auto& voice : voices)
     {
         if (voice.isActive())

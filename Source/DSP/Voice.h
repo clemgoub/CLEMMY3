@@ -1,19 +1,31 @@
 #pragma once
 
 #include "Oscillator.h"
+#include "NoiseGenerator.h"
 #include "Envelope.h"
+#include <array>
 
 /**
- * Voice - Single synthesizer voice
+ * Voice - Single synthesizer voice with triple oscillator architecture
  *
- * Encapsulates an oscillator and envelope for polyphonic synthesis.
- * Manages voice lifecycle (note-on, note-off, age tracking for voice stealing).
+ * Contains 3 independent oscillators + noise generator, all mixed before
+ * applying a single envelope (post-mixer architecture for efficiency).
  *
- * Python reference: sine_generator_qt.py:100-177 (Voice class)
+ * Each oscillator has independent controls:
+ * - Enabled/disabled
+ * - Waveform selection
+ * - Gain (0-100%)
+ * - Detune (±100 cents)
+ * - Octave offset (-3 to +3)
+ * - Pulse width (for square wave)
+ *
+ * Python reference: sine_generator_qt.py:523-620 (Voice class with 3 oscillators)
  */
 class Voice
 {
 public:
+    static constexpr int NUM_OSCILLATORS = 3;
+
     Voice();
 
     /**
@@ -30,15 +42,30 @@ public:
     void reset();
 
     /**
-     * Parameter updates - broadcast from VoiceManager
+     * Per-oscillator parameter updates
      */
-    void setOscillatorWaveform(Oscillator::Waveform waveform);
-    void setOscillatorPulseWidth(float pw);
+    void setOscillatorEnabled(int oscIndex, bool enabled);
+    void setOscillatorWaveform(int oscIndex, Oscillator::Waveform waveform);
+    void setOscillatorGain(int oscIndex, float gain);          // 0.0 to 1.0
+    void setOscillatorDetune(int oscIndex, float cents);       // ±100 cents
+    void setOscillatorOctave(int oscIndex, int octaveOffset);  // -3 to +3
+    void setOscillatorPulseWidth(int oscIndex, float pw);      // 0.01 to 0.99
+
+    /**
+     * Noise generator parameters
+     */
+    void setNoiseEnabled(bool enabled);
+    void setNoiseType(NoiseGenerator::NoiseType type);
+    void setNoiseGain(float gain);  // 0.0 to 1.0
+
+    /**
+     * Envelope parameters (shared by all oscillators + noise)
+     */
     void setEnvelopeParameters(float attack, float decay, float sustain, float release);
 
     /**
      * Audio generation
-     * @return Single audio sample
+     * @return Single audio sample (mixed oscillators with envelope applied)
      */
     float processSample();
 
@@ -46,7 +73,7 @@ public:
      * Voice state queries
      */
     bool isActive() const;          // Has active note (envelope not idle)
-    bool isSounding() const;        // Producing audible output (level > threshold)
+    bool isSounding() const;        // Producing audible output (not in release)
     int getCurrentNote() const { return currentMidiNote; }
     int getAge() const { return age; }
 
@@ -57,9 +84,26 @@ public:
     void resetAge() { age = 0; }
 
 private:
+    // Oscillator settings (per-oscillator parameters)
+    struct OscillatorSettings
+    {
+        bool enabled = true;
+        float gain = 0.33f;              // Default: 33% each for 3 oscillators
+        float detuneCents = 0.0f;        // ±100 cents
+        int octaveOffset = 0;            // -3 to +3 octaves
+    };
+
     // DSP components
-    Oscillator oscillator;
+    std::array<Oscillator, NUM_OSCILLATORS> oscillators;
+    NoiseGenerator noiseGenerator;
     Envelope envelope;
+
+    // Per-oscillator settings
+    std::array<OscillatorSettings, NUM_OSCILLATORS> oscSettings;
+
+    // Noise settings
+    bool noiseEnabled = false;
+    float noiseGain = 0.0f;
 
     // Voice state
     int currentMidiNote = -1;   // -1 = voice is free
@@ -67,7 +111,13 @@ private:
     float unisonDetune = 0.0f;  // Detuning in cents for unison mode
 
     /**
-     * Update oscillator frequency based on MIDI note and detune
+     * Update all oscillator frequencies based on MIDI note, octave, detune, and unison detune
      */
-    void updateFrequency();
+    void updateOscillatorFrequencies();
+
+    /**
+     * Mix all enabled oscillators + noise
+     * @return Mixed signal (before envelope)
+     */
+    float mixOscillators();
 };
