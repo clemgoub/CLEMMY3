@@ -5,10 +5,12 @@
 /**
  * Oscillator - Waveform generator with PolyBLEP anti-aliasing
  *
- * Generates three waveforms:
+ * Generates five waveforms:
  * - Sine: Pure sine wave
  * - Sawtooth: Bright, buzzy waveform with PolyBLEP
  * - Square: Hollow waveform with pulse width modulation and PolyBLEP
+ * - Triangle: Smooth, mellow waveform with PolyBLEP
+ * - Noise: White noise generator (frequency-independent)
  *
  * Python reference: sine_generator_qt.py:3555-3615 (generate_waveform)
  */
@@ -19,7 +21,9 @@ public:
     {
         Sine = 0,
         Sawtooth = 1,
-        Square = 2
+        Square = 2,
+        Triangle = 3,
+        Noise = 4
     };
 
     Oscillator();
@@ -74,6 +78,8 @@ private:
     float generateSine();
     float generateSawtooth();
     float generateSquare();
+    float generateTriangle();
+    float generateNoise();
 
     // Helper methods
     void updatePhaseIncrement();

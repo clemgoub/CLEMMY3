@@ -35,11 +35,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::StringArray{"Mono", "Poly", "Unison"},
         1));  // Default: Poly
 
-    // Waveform parameter (Sine=0, Sawtooth=1, Square=2)
+    // Waveform parameter (Sine=0, Sawtooth=1, Square=2, Triangle=3, Noise=4)
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
         "waveform",
         "Waveform",
-        juce::StringArray{"Sine", "Sawtooth", "Square"},
+        juce::StringArray{"Sine", "Sawtooth", "Square", "Triangle", "Noise"},
         0));  // Default: Sine
 
     // Pulse Width parameter (for Square wave)

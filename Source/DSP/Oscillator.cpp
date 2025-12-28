@@ -1,5 +1,6 @@
 #include "Oscillator.h"
 #include <cmath>
+#include <cstdlib>  // for std::rand()
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
@@ -57,10 +58,21 @@ float Oscillator::processSample()
         case Waveform::Square:
             sample = generateSquare();
             break;
+
+        case Waveform::Triangle:
+            sample = generateTriangle();
+            break;
+
+        case Waveform::Noise:
+            sample = generateNoise();
+            break;
     }
 
-    // Advance phase
-    phase += phaseIncrement;
+    // Advance phase (except for noise which is phase-independent)
+    if (waveform != Waveform::Noise)
+    {
+        phase += phaseIncrement;
+    }
 
     // Wrap phase to 0.0-1.0 range
     AudioUtils::wrapPhase(phase);
@@ -115,4 +127,46 @@ float Oscillator::generateSquare()
     polyBlepCorrection -= AudioUtils::polyBLEP(phaseShifted, phaseIncrement);
 
     return naiveSquare - polyBlepCorrection;
+}
+
+float Oscillator::generateTriangle()
+{
+    // Naive triangle wave: ramp up 0->0.5, ramp down 0.5->1.0
+    // Output range: -1 to +1
+    float naiveTriangle;
+    if (phase < 0.5)
+    {
+        // Rising: 0 -> 0.5 maps to -1 -> +1
+        naiveTriangle = 4.0f * static_cast<float>(phase) - 1.0f;
+    }
+    else
+    {
+        // Falling: 0.5 -> 1.0 maps to +1 -> -1
+        naiveTriangle = -4.0f * static_cast<float>(phase) + 3.0f;
+    }
+
+    // Apply PolyBLEP at the peak (phase = 0.5) for anti-aliasing
+    // Triangle has slope discontinuities at peak and trough
+    float polyBlepCorrection = 0.0f;
+
+    // Discontinuity at peak (phase = 0.5)
+    double phasePeak = phase - 0.5;
+    if (phasePeak < 0.0)
+        phasePeak += 1.0;
+
+    // PolyBLEP integrates the discontinuity
+    // For triangle, we need to integrate the derivative discontinuity
+    polyBlepCorrection += AudioUtils::polyBLEP(phasePeak, phaseIncrement) * 4.0f * phaseIncrement;
+
+    // Discontinuity at trough (phase = 0.0)
+    polyBlepCorrection -= AudioUtils::polyBLEP(phase, phaseIncrement) * 4.0f * phaseIncrement;
+
+    return naiveTriangle + polyBlepCorrection;
+}
+
+float Oscillator::generateNoise()
+{
+    // White noise: random values between -1 and +1
+    // Frequency-independent, no phase tracking needed
+    return (static_cast<float>(std::rand()) / RAND_MAX) * 2.0f - 1.0f;
 }

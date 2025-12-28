@@ -28,6 +28,8 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     waveformSelector.addItem("Sine", 1);
     waveformSelector.addItem("Sawtooth", 2);
     waveformSelector.addItem("Square", 3);
+    waveformSelector.addItem("Triangle", 4);
+    waveformSelector.addItem("Noise", 5);
     waveformSelector.setSelectedId(1);
     waveformSelector.onChange = [this] { waveformChanged(); };
 
