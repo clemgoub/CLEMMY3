@@ -7,7 +7,7 @@
 //==============================================================================
 /**
     CLEMMY3 Editor
-    Phase 4: Triple Oscillator Architecture with Full GUI
+    Phase 5: Moog Ladder Filter
 */
 class CLEMMY3AudioProcessorEditor : public juce::AudioProcessorEditor
 {
@@ -37,6 +37,7 @@ private:
     juce::TextButton osc1OctaveUpButton;
     juce::TextButton osc1OctaveDownButton;
     juce::Label osc1OctaveLabel;
+    juce::Label osc1OctaveValueLabel;  // Displays current octave value (-3 to +3)
     juce::Slider osc1PWSlider;
     juce::Label osc1PWLabel;
 
@@ -51,6 +52,7 @@ private:
     juce::TextButton osc2OctaveUpButton;
     juce::TextButton osc2OctaveDownButton;
     juce::Label osc2OctaveLabel;
+    juce::Label osc2OctaveValueLabel;  // Displays current octave value (-3 to +3)
     juce::Slider osc2PWSlider;
     juce::Label osc2PWLabel;
 
@@ -65,6 +67,7 @@ private:
     juce::TextButton osc3OctaveUpButton;
     juce::TextButton osc3OctaveDownButton;
     juce::Label osc3OctaveLabel;
+    juce::Label osc3OctaveValueLabel;  // Displays current octave value (-3 to +3)
     juce::Slider osc3PWSlider;
     juce::Label osc3PWLabel;
 
@@ -78,6 +81,15 @@ private:
     // Master Volume
     juce::Slider masterVolumeSlider;
     juce::Label masterVolumeLabel;
+
+    // ========== FILTER CONTROLS ==========
+    juce::TextButton filterLowPassButton;
+    juce::TextButton filterBandPassButton;
+    juce::TextButton filterHighPassButton;
+    juce::Slider filterCutoffSlider;
+    juce::Label filterCutoffLabel;
+    juce::Slider filterResonanceSlider;
+    juce::Label filterResonanceLabel;
 
     // ========== ADSR ENVELOPE ==========
     juce::Slider attackSlider;
@@ -124,6 +136,10 @@ private:
 
     // Master Volume
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> masterVolumeAttachment;
+
+    // Filter
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterCutoffAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterResonanceAttachment;
 
     // ADSR
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttachment;

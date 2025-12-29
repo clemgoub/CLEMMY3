@@ -174,6 +174,34 @@ void VoiceManager::setEnvelopeParameters(float attack, float decay, float sustai
 }
 
 //==============================================================================
+// Filter Parameters
+//==============================================================================
+
+void VoiceManager::setFilterMode(MoogFilter::Mode mode)
+{
+    for (auto& voice : voices)
+    {
+        voice.setFilterMode(mode);
+    }
+}
+
+void VoiceManager::setFilterCutoff(float cutoffHz)
+{
+    for (auto& voice : voices)
+    {
+        voice.setFilterCutoff(cutoffHz);
+    }
+}
+
+void VoiceManager::setFilterResonance(float resonance)
+{
+    for (auto& voice : voices)
+    {
+        voice.setFilterResonance(resonance);
+    }
+}
+
+//==============================================================================
 // Audio Generation
 //==============================================================================
 

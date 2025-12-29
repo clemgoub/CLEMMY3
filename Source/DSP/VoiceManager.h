@@ -59,6 +59,13 @@ public:
     void setNoiseGain(float gain);
 
     /**
+     * Filter parameters (shared by all voices)
+     */
+    void setFilterMode(MoogFilter::Mode mode);
+    void setFilterCutoff(float cutoffHz);      // 20.0 - 12000.0 Hz
+    void setFilterResonance(float resonance);  // 0.0 - 1.0
+
+    /**
      * Envelope parameters (shared by all voices)
      */
     void setEnvelopeParameters(float attack, float decay, float sustain, float release);

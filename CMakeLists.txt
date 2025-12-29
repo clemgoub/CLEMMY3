@@ -28,7 +28,8 @@ target_sources(CLEMMY3
         Source/DSP/Envelope.cpp
         Source/DSP/Voice.cpp
         Source/DSP/VoiceManager.cpp
-        Source/DSP/NoiseGenerator.cpp)
+        Source/DSP/NoiseGenerator.cpp
+        Source/DSP/MoogFilter.cpp)
 
 # Add compile definitions
 target_compile_definitions(CLEMMY3

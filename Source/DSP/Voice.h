@@ -3,6 +3,7 @@
 #include "Oscillator.h"
 #include "NoiseGenerator.h"
 #include "Envelope.h"
+#include "MoogFilter.h"
 #include <array>
 
 /**
@@ -64,6 +65,13 @@ public:
     void setEnvelopeParameters(float attack, float decay, float sustain, float release);
 
     /**
+     * Filter parameters
+     */
+    void setFilterMode(MoogFilter::Mode mode);
+    void setFilterCutoff(float cutoffHz);      // 20.0 - 12000.0 Hz
+    void setFilterResonance(float resonance);  // 0.0 - 1.0
+
+    /**
      * Audio generation
      * @return Single audio sample (mixed oscillators with envelope applied)
      */
@@ -96,6 +104,7 @@ private:
     // DSP components
     std::array<Oscillator, NUM_OSCILLATORS> oscillators;
     NoiseGenerator noiseGenerator;
+    MoogFilter filter;       // Applied after mixing, before envelope
     Envelope envelope;
 
     // Per-oscillator settings

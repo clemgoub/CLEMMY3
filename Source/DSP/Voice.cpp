@@ -15,6 +15,7 @@ void Voice::setSampleRate(double newSampleRate)
     }
 
     noiseGenerator.setSampleRate(newSampleRate);
+    filter.setSampleRate(newSampleRate);
     envelope.setSampleRate(newSampleRate);
 }
 
@@ -55,6 +56,9 @@ void Voice::reset()
 
     // Reset noise generator
     noiseGenerator.reset();
+
+    // Reset filter state
+    filter.reset();
 
     // Reset envelope to idle state
     envelope.reset();
@@ -148,6 +152,25 @@ void Voice::setEnvelopeParameters(float attack, float decay, float sustain, floa
 }
 
 //==============================================================================
+// Filter Parameters
+//==============================================================================
+
+void Voice::setFilterMode(MoogFilter::Mode mode)
+{
+    filter.setMode(mode);
+}
+
+void Voice::setFilterCutoff(float cutoffHz)
+{
+    filter.setCutoff(cutoffHz);
+}
+
+void Voice::setFilterResonance(float resonance)
+{
+    filter.setResonance(resonance);
+}
+
+//==============================================================================
 // Audio Processing
 //==============================================================================
 
@@ -156,10 +179,15 @@ float Voice::processSample()
     if (!isActive())
         return 0.0f;
 
-    // Mix all enabled oscillators + noise (post-mixer architecture)
+    // Signal chain: Oscillators → Mix → Filter → Envelope → Output
+
+    // 1. Mix all enabled oscillators + noise
     float mix = mixOscillators();
 
-    // Apply single envelope to mixed signal
+    // 2. Apply filter to mixed signal
+    float filtered = filter.processSample(mix);
+
+    // 3. Apply envelope to filtered signal
     float envLevel = envelope.processSample();
 
     // If envelope has finished (idle), mark voice as free
@@ -168,7 +196,7 @@ float Voice::processSample()
         currentMidiNote = -1;
     }
 
-    return mix * envLevel;
+    return filtered * envLevel;
 }
 
 float Voice::mixOscillators()

@@ -160,6 +160,25 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
         0.8f));  // Default: 80%
 
+    // ==================== FILTER PARAMETERS ====================
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "filterMode", "Filter Mode",
+        juce::StringArray{"LowPass", "BandPass", "HighPass"},
+        0));  // Default: LowPass
+
+    // Logarithmic cutoff range (20 Hz - 12 kHz)
+    // Max 12 kHz is typical for analog Moog filters (Minimoog, Prophet-5, etc.)
+    // Middle value = 1000 Hz for good default
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "filterCutoff", "Filter Cutoff",
+        juce::NormalisableRange<float>(20.0f, 12000.0f, 0.1f, 0.25f),  // 0.25 = logarithmic skew
+        1000.0f));  // Default: 1000 Hz
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "filterResonance", "Filter Resonance",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f));  // Default: 0% (no resonance)
+
     return { params.begin(), params.end() };
 }
 
@@ -313,6 +332,11 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     int noiseTypeIndex = parameters.getRawParameterValue("noiseType")->load();
     float noiseGain = parameters.getRawParameterValue("noiseGain")->load();
 
+    // Filter parameters
+    int filterModeIndex = parameters.getRawParameterValue("filterMode")->load();
+    float filterCutoff = parameters.getRawParameterValue("filterCutoff")->load();
+    float filterResonance = parameters.getRawParameterValue("filterResonance")->load();
+
     // Update voice manager mode
     voiceManager.setVoiceMode(static_cast<VoiceManager::VoiceMode>(voiceModeIndex));
 
@@ -347,6 +371,11 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     voiceManager.setNoiseEnabled(noiseEnabled);
     voiceManager.setNoiseType(static_cast<NoiseGenerator::NoiseType>(noiseTypeIndex));
     voiceManager.setNoiseGain(noiseGain);
+
+    // Broadcast filter parameters
+    voiceManager.setFilterMode(static_cast<MoogFilter::Mode>(filterModeIndex));
+    voiceManager.setFilterCutoff(filterCutoff);
+    voiceManager.setFilterResonance(filterResonance);
 
     // Process MIDI messages (from both sources)
     for (const auto metadata : combinedMidi)
