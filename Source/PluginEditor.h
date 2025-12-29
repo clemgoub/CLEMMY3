@@ -7,7 +7,7 @@
 //==============================================================================
 /**
     CLEMMY3 Editor
-    Phase 5: Moog Ladder Filter
+    Phase 6: Dual LFO Modulation
 */
 class CLEMMY3AudioProcessorEditor : public juce::AudioProcessorEditor
 {
@@ -23,11 +23,13 @@ private:
     CLEMMY3AudioProcessor& audioProcessor;
 
     // Voice Mode
-    juce::ComboBox voiceModeSelector;
     juce::Label voiceModeLabel;
+    juce::TextButton voiceModeMonoButton;
+    juce::TextButton voiceModePolyButton;
+    juce::TextButton voiceModeUnisonButton;
 
     // ========== OSCILLATOR 1 CONTROLS ==========
-    juce::ToggleButton osc1EnableButton;
+    juce::TextButton osc1EnableButton;
     juce::ComboBox osc1WaveformSelector;
     juce::Label osc1WaveformLabel;
     juce::Slider osc1GainSlider;
@@ -42,7 +44,7 @@ private:
     juce::Label osc1PWLabel;
 
     // ========== OSCILLATOR 2 CONTROLS ==========
-    juce::ToggleButton osc2EnableButton;
+    juce::TextButton osc2EnableButton;
     juce::ComboBox osc2WaveformSelector;
     juce::Label osc2WaveformLabel;
     juce::Slider osc2GainSlider;
@@ -57,7 +59,7 @@ private:
     juce::Label osc2PWLabel;
 
     // ========== OSCILLATOR 3 CONTROLS ==========
-    juce::ToggleButton osc3EnableButton;
+    juce::TextButton osc3EnableButton;
     juce::ComboBox osc3WaveformSelector;
     juce::Label osc3WaveformLabel;
     juce::Slider osc3GainSlider;
@@ -72,7 +74,8 @@ private:
     juce::Label osc3PWLabel;
 
     // ========== MIXER CONTROLS ==========
-    juce::ToggleButton noiseEnableButton;
+    juce::Label noiseLabel;
+    juce::TextButton noiseEnableButton;
     juce::ComboBox noiseTypeSelector;
     juce::Label noiseTypeLabel;
     juce::Slider noiseGainSlider;
@@ -101,36 +104,53 @@ private:
     juce::Slider releaseSlider;
     juce::Label releaseLabel;
 
+    // ========== LFO 1 ==========
+    juce::Label lfo1Label;
+    juce::ComboBox lfo1WaveformSelector;
+    juce::Label lfo1WaveformLabel;
+    juce::Slider lfo1RateSlider;
+    juce::Label lfo1RateLabel;
+    juce::Slider lfo1DepthSlider;
+    juce::Label lfo1DepthLabel;
+    juce::ComboBox lfo1DestinationSelector;
+    juce::Label lfo1DestinationLabel;
+
+    // ========== LFO 2 ==========
+    juce::Label lfo2Label;
+    juce::ComboBox lfo2WaveformSelector;
+    juce::Label lfo2WaveformLabel;
+    juce::Slider lfo2RateSlider;
+    juce::Label lfo2RateLabel;
+    juce::Slider lfo2DepthSlider;
+    juce::Label lfo2DepthLabel;
+    juce::ComboBox lfo2DestinationSelector;
+    juce::Label lfo2DestinationLabel;
+
     // Virtual MIDI keyboard
     juce::MidiKeyboardComponent midiKeyboard;
 
     // ========== PARAMETER ATTACHMENTS ==========
-    // Voice mode
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> voiceModeAttachment;
+    // Voice mode - no attachment, uses onClick handlers
 
-    // Oscillator 1
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> osc1EnableAttachment;
+    // Oscillator 1 - osc1Enable uses onClick handler
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc1WaveformAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1GainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1DetuneAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1PWAttachment;
 
-    // Oscillator 2
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> osc2EnableAttachment;
+    // Oscillator 2 - osc2Enable uses onClick handler
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc2WaveformAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2GainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2DetuneAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2PWAttachment;
 
-    // Oscillator 3
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> osc3EnableAttachment;
+    // Oscillator 3 - osc3Enable uses onClick handler
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc3WaveformAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3GainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3DetuneAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3PWAttachment;
 
-    // Noise
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> noiseEnableAttachment;
+    // Noise - noiseEnable uses onClick handler
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> noiseTypeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> noiseGainAttachment;
 
@@ -146,6 +166,18 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sustainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> releaseAttachment;
+
+    // LFO 1
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo1WaveformAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfo1RateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfo1DepthAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo1DestinationAttachment;
+
+    // LFO 2
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo2WaveformAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfo2RateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfo2DepthAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo2DestinationAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CLEMMY3AudioProcessorEditor)
 };

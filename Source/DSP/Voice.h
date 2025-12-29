@@ -4,6 +4,7 @@
 #include "NoiseGenerator.h"
 #include "Envelope.h"
 #include "MoogFilter.h"
+#include "LFO.h"
 #include <array>
 
 /**
@@ -72,6 +73,19 @@ public:
     void setFilterResonance(float resonance);  // 0.0 - 1.0
 
     /**
+     * LFO parameters (2 LFOs per voice)
+     */
+    void setLFO1Waveform(LFO::Waveform waveform);
+    void setLFO1Rate(float rateHz);              // 0.01 - 20 Hz
+    void setLFO1Depth(float depth);              // 0.0 - 1.0
+    void setLFO1Destination(int dest);           // Modulation target
+
+    void setLFO2Waveform(LFO::Waveform waveform);
+    void setLFO2Rate(float rateHz);              // 0.01 - 20 Hz
+    void setLFO2Depth(float depth);              // 0.0 - 1.0
+    void setLFO2Destination(int dest);           // Modulation target
+
+    /**
      * Audio generation
      * @return Single audio sample (mixed oscillators with envelope applied)
      */
@@ -92,6 +106,17 @@ public:
     void resetAge() { age = 0; }
 
 private:
+    // LFO modulation destinations
+    enum ModDestination
+    {
+        ModNone = 0,
+        ModFilterCutoff,
+        ModPitch,        // Vibrato (all oscillators)
+        ModPWM,          // Modulate pulse width
+        ModFilterRes,    // Filter resonance
+        ModVolume        // Tremolo (amplitude modulation)
+    };
+
     // Oscillator settings (per-oscillator parameters)
     struct OscillatorSettings
     {
@@ -106,6 +131,8 @@ private:
     NoiseGenerator noiseGenerator;
     MoogFilter filter;       // Applied after mixing, before envelope
     Envelope envelope;
+    LFO lfo1;
+    LFO lfo2;
 
     // Per-oscillator settings
     std::array<OscillatorSettings, NUM_OSCILLATORS> oscSettings;
@@ -113,6 +140,12 @@ private:
     // Noise settings
     bool noiseEnabled = false;
     float noiseGain = 0.0f;
+
+    // LFO settings
+    ModDestination lfo1Destination = ModNone;
+    ModDestination lfo2Destination = ModNone;
+    float baseFilterCutoff = 1000.0f;     // Unmodulated filter cutoff
+    float baseFilterResonance = 0.0f;     // Unmodulated filter resonance
 
     // Voice state
     int currentMidiNote = -1;   // -1 = voice is free

@@ -202,6 +202,74 @@ void VoiceManager::setFilterResonance(float resonance)
 }
 
 //==============================================================================
+// LFO Parameters
+//==============================================================================
+
+void VoiceManager::setLFO1Waveform(LFO::Waveform waveform)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO1Waveform(waveform);
+    }
+}
+
+void VoiceManager::setLFO1Rate(float rateHz)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO1Rate(rateHz);
+    }
+}
+
+void VoiceManager::setLFO1Depth(float depth)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO1Depth(depth);
+    }
+}
+
+void VoiceManager::setLFO1Destination(int dest)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO1Destination(dest);
+    }
+}
+
+void VoiceManager::setLFO2Waveform(LFO::Waveform waveform)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO2Waveform(waveform);
+    }
+}
+
+void VoiceManager::setLFO2Rate(float rateHz)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO2Rate(rateHz);
+    }
+}
+
+void VoiceManager::setLFO2Depth(float depth)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO2Depth(depth);
+    }
+}
+
+void VoiceManager::setLFO2Destination(int dest)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO2Destination(dest);
+    }
+}
+
+//==============================================================================
 // Audio Generation
 //==============================================================================
 

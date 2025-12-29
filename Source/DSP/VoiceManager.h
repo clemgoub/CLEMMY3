@@ -71,6 +71,19 @@ public:
     void setEnvelopeParameters(float attack, float decay, float sustain, float release);
 
     /**
+     * LFO parameters (shared by all voices)
+     */
+    void setLFO1Waveform(LFO::Waveform waveform);
+    void setLFO1Rate(float rateHz);
+    void setLFO1Depth(float depth);
+    void setLFO1Destination(int dest);
+
+    void setLFO2Waveform(LFO::Waveform waveform);
+    void setLFO2Rate(float rateHz);
+    void setLFO2Depth(float depth);
+    void setLFO2Destination(int dest);
+
+    /**
      * Audio generation
      * @return Mixed output from all active voices
      */

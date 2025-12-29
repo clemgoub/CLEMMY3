@@ -179,6 +179,48 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
         0.0f));  // Default: 0% (no resonance)
 
+    // ==================== LFO 1 PARAMETERS ====================
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "lfo1Waveform", "LFO 1 Waveform",
+        juce::StringArray{"Sine", "Triangle", "Square", "Sawtooth", "S&H"},
+        0));  // Default: Sine
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "lfo1Rate", "LFO 1 Rate",
+        juce::NormalisableRange<float>(0.01f, 20.0f, 0.01f, 0.3f),  // Logarithmic
+        2.0f));  // Default: 2 Hz
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "lfo1Depth", "LFO 1 Depth",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f));  // Default: 0% (off)
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "lfo1Destination", "LFO 1 Destination",
+        juce::StringArray{"None", "Filter Cutoff", "Pitch", "PWM", "Filter Res", "Volume"},
+        0));  // Default: None
+
+    // ==================== LFO 2 PARAMETERS ====================
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "lfo2Waveform", "LFO 2 Waveform",
+        juce::StringArray{"Sine", "Triangle", "Square", "Sawtooth", "S&H"},
+        0));  // Default: Sine
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "lfo2Rate", "LFO 2 Rate",
+        juce::NormalisableRange<float>(0.01f, 20.0f, 0.01f, 0.3f),  // Logarithmic
+        4.0f));  // Default: 4 Hz
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "lfo2Depth", "LFO 2 Depth",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f));  // Default: 0% (off)
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "lfo2Destination", "LFO 2 Destination",
+        juce::StringArray{"None", "Filter Cutoff", "Pitch", "PWM", "Filter Res", "Volume"},
+        0));  // Default: None
+
     return { params.begin(), params.end() };
 }
 
@@ -376,6 +418,28 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     voiceManager.setFilterMode(static_cast<MoogFilter::Mode>(filterModeIndex));
     voiceManager.setFilterCutoff(filterCutoff);
     voiceManager.setFilterResonance(filterResonance);
+
+    // LFO parameters
+    int lfo1WaveformIndex = parameters.getRawParameterValue("lfo1Waveform")->load();
+    float lfo1Rate = parameters.getRawParameterValue("lfo1Rate")->load();
+    float lfo1Depth = parameters.getRawParameterValue("lfo1Depth")->load();
+    int lfo1Destination = parameters.getRawParameterValue("lfo1Destination")->load();
+
+    int lfo2WaveformIndex = parameters.getRawParameterValue("lfo2Waveform")->load();
+    float lfo2Rate = parameters.getRawParameterValue("lfo2Rate")->load();
+    float lfo2Depth = parameters.getRawParameterValue("lfo2Depth")->load();
+    int lfo2Destination = parameters.getRawParameterValue("lfo2Destination")->load();
+
+    // Broadcast LFO parameters
+    voiceManager.setLFO1Waveform(static_cast<LFO::Waveform>(lfo1WaveformIndex));
+    voiceManager.setLFO1Rate(lfo1Rate);
+    voiceManager.setLFO1Depth(lfo1Depth);
+    voiceManager.setLFO1Destination(lfo1Destination);
+
+    voiceManager.setLFO2Waveform(static_cast<LFO::Waveform>(lfo2WaveformIndex));
+    voiceManager.setLFO2Rate(lfo2Rate);
+    voiceManager.setLFO2Depth(lfo2Depth);
+    voiceManager.setLFO2Destination(lfo2Destination);
 
     // Process MIDI messages (from both sources)
     for (const auto metadata : combinedMidi)
