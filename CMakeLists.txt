@@ -17,7 +17,8 @@ juce_add_plugin(CLEMMY3
     PLUGIN_MANUFACTURER_CODE Clmy
     PLUGIN_CODE Clm3
     FORMATS AU VST3 Standalone
-    PRODUCT_NAME "CLEMMY3")
+    PRODUCT_NAME "CLEMMY3"
+    ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/Assets/Icons/1x/Icon_1024p.png")
 
 # Add source files
 target_sources(CLEMMY3
