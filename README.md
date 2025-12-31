@@ -31,10 +31,12 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
 
 - **🔊 Moog Ladder Filter**
   - 4-pole ladder topology with feedback
-  - Three modes: Low Pass (24dB/oct), Band Pass (12dB/oct), High Pass
+  - Three modes: Low Pass (24dB/oct), Band Pass (notch-type), High Pass
   - Cutoff: 20Hz - 12kHz with frequency warping compensation
   - Resonance: 0.0 - 1.0 (up to self-oscillation)
-  - Tanh saturation for analog warmth
+  - Tanh saturation for analog warmth and low-end character
+  - Frequency-dependent feedback reduction prevents volume drop at high cutoff + resonance
+  - True bandpass filter cuts both lows and highs
 
 - **📊 Dual LFO Modulation System**
   - 2 independent LFOs per voice (16 total across 8 voices)
