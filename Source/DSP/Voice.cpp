@@ -21,15 +21,24 @@ void Voice::setSampleRate(double newSampleRate)
     lfo2.setSampleRate(newSampleRate);
 }
 
-void Voice::noteOn(int midiNote, float velocity, float detune)
+void Voice::noteOn(int midiNote, float velocity, float detune, bool randomizePhase)
 {
     currentMidiNote = midiNote;
     unisonDetune = detune;
 
-    // Reset oscillator phases for clean waveform start
+    // Reset or randomize oscillator phases
     for (auto& osc : oscillators)
     {
-        osc.reset();
+        if (randomizePhase)
+        {
+            // Random phase for unison mode - prevents phaser effect
+            osc.setRandomPhase();
+        }
+        else
+        {
+            // Clean phase reset for mono/poly modes
+            osc.reset();
+        }
     }
 
     // Update all oscillator frequencies with new note

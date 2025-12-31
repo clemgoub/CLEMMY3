@@ -35,6 +35,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::StringArray{"Mono", "Poly", "Unison"},
         1));  // Default: Poly
 
+    // Unison Detune parameter - preset values
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "unisonDetune", "Unison Detune",
+        juce::StringArray{"5 ct", "7 ct", "10 ct", "12 ct", "15 ct", "20 ct", "25 ct"},
+        2));  // Default: "10 ct" (index 2)
+
     // ==================== OSCILLATOR 1 PARAMETERS ====================
     params.push_back(std::make_unique<juce::AudioParameterBool>(
         "osc1Enabled", "Osc 1 Enabled", true));
@@ -339,6 +345,11 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // Get current parameter values
     int voiceModeIndex = parameters.getRawParameterValue("voiceMode")->load();
 
+    // Map unison detune choice index to actual cent values
+    int unisonDetuneIndex = parameters.getRawParameterValue("unisonDetune")->load();
+    const float unisonDetuneValues[] = {5.0f, 7.0f, 10.0f, 12.0f, 15.0f, 20.0f, 25.0f};
+    float unisonDetune = unisonDetuneValues[unisonDetuneIndex];
+
     // Oscillator 1 parameters
     bool osc1Enabled = parameters.getRawParameterValue("osc1Enabled")->load() > 0.5f;
     int osc1Waveform = parameters.getRawParameterValue("osc1Waveform")->load();
@@ -379,8 +390,9 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     float filterCutoff = parameters.getRawParameterValue("filterCutoff")->load();
     float filterResonance = parameters.getRawParameterValue("filterResonance")->load();
 
-    // Update voice manager mode
+    // Update voice manager mode and unison detune
     voiceManager.setVoiceMode(static_cast<VoiceManager::VoiceMode>(voiceModeIndex));
+    voiceManager.setUnisonDetune(unisonDetune);
 
     // Broadcast oscillator 1 parameters to all voices
     voiceManager.setOscillatorEnabled(0, osc1Enabled);

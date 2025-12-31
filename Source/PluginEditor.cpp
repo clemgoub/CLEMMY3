@@ -49,6 +49,24 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
             audioProcessor.parameters.getParameter("voiceMode")->setValueNotifyingHost(1.0f);
     };
 
+    // Unison Detune selector
+    addAndMakeVisible(unisonDetuneSelector);
+    unisonDetuneSelector.addItem("5 ct", 1);
+    unisonDetuneSelector.addItem("7 ct", 2);
+    unisonDetuneSelector.addItem("10 ct", 3);
+    unisonDetuneSelector.addItem("12 ct", 4);
+    unisonDetuneSelector.addItem("15 ct", 5);
+    unisonDetuneSelector.addItem("20 ct", 6);
+    unisonDetuneSelector.addItem("25 ct", 7);
+    unisonDetuneSelector.setSelectedId(3);  // Default: "10 ct"
+
+    addAndMakeVisible(unisonDetuneLabel);
+    unisonDetuneLabel.setText("Unison detune:", juce::dontSendNotification);
+    unisonDetuneLabel.setJustificationType(juce::Justification::centredRight);
+
+    unisonDetuneAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.parameters, "unisonDetune", unisonDetuneSelector);
+
     // ========== OSCILLATOR 1 CONTROLS ==========
     // Enable button
     addAndMakeVisible(osc1EnableButton);
@@ -750,6 +768,11 @@ void CLEMMY3AudioProcessorEditor::resized()
     voiceModePolyButton.setBounds(voiceModeArea.removeFromLeft(modeBtnWidth));
     voiceModeArea.removeFromLeft(modeBtnSpacing);
     voiceModeUnisonButton.setBounds(voiceModeArea.removeFromLeft(modeBtnWidth));
+
+    // Unison Detune selector (after buttons) - label and dropdown on same line
+    voiceModeArea.removeFromLeft(20);  // Spacing
+    unisonDetuneLabel.setBounds(voiceModeArea.removeFromLeft(95));  // "Unison detune:" label
+    unisonDetuneSelector.setBounds(voiceModeArea.removeFromLeft(80).removeFromTop(25));
 
     area.removeFromTop(22);  // More spacing (was 5, now 22 to use extra header space)
 

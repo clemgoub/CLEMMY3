@@ -39,7 +39,7 @@ public:
     /**
      * Voice lifecycle
      */
-    void noteOn(int midiNote, float velocity, float unisonDetune = 0.0f);
+    void noteOn(int midiNote, float velocity, float unisonDetune = 0.0f, bool randomizePhase = false);
     void noteOff();
     void reset();
 

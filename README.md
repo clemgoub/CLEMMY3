@@ -23,6 +23,8 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
 
 - **🎚️ 8-Voice Polyphony**
   - Three voice modes: Mono (last note priority), Poly (up to 8 voices), Unison (detuned chorus)
+  - Adjustable unison detune (5-25 cents) for variable chorus intensity
+  - Random phase initialization eliminates phaser artifacts in unison mode
   - LRU (Least Recently Used) voice stealing algorithm
   - Smooth envelope retriggering for glitch-free voice transitions
   - Per-voice independent modulation
@@ -105,8 +107,8 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
   - Thread-safe parameter updates via AudioProcessorValueTreeState
 
 - **Parameters:**
-  - 44 total parameters (fully automatable in DAW)
-  - Voice mode, 18 oscillator params, 4 ADSR, 3 noise, 3 filter, 16 LFO
+  - 45 total parameters (fully automatable in DAW)
+  - 2 voice mode (mode + unison detune), 18 oscillator params, 4 ADSR, 3 noise, 1 master volume, 3 filter, 8 LFO1, 8 LFO2
 
 ## Building
 
@@ -161,7 +163,7 @@ For detailed build instructions, see [BUILD_GUIDE.md](Docs/BUILD_GUIDE.md)
 - **Tremolo**: Set LFO1 to Volume destination, depth ~100%, rate ~4Hz
 - **PWM Sweep**: Enable square wave, set LFO to PWM destination, depth ~100%
 - **Filter Sweep**: Set LFO to Filter Cutoff, adjust resonance for character
-- **Unison Mode**: Creates thick, chorused sound with 8 detuned voices
+- **Unison Mode**: Switch to UNI mode and adjust detune (5-25 cents) for thick, chorused sound without phaser artifacts
 
 ## Development
 

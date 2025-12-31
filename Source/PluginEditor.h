@@ -27,6 +27,8 @@ private:
     juce::TextButton voiceModeMonoButton;
     juce::TextButton voiceModePolyButton;
     juce::TextButton voiceModeUnisonButton;
+    juce::ComboBox unisonDetuneSelector;
+    juce::Label unisonDetuneLabel;
 
     // ========== OSCILLATOR 1 CONTROLS ==========
     juce::TextButton osc1EnableButton;
@@ -131,6 +133,7 @@ private:
 
     // ========== PARAMETER ATTACHMENTS ==========
     // Voice mode - no attachment, uses onClick handlers
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> unisonDetuneAttachment;
 
     // Oscillator 1 - osc1Enable uses onClick handler
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc1WaveformAttachment;

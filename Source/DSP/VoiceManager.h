@@ -32,6 +32,7 @@ public:
      */
     void setSampleRate(double sampleRate);
     void setVoiceMode(VoiceMode mode);
+    void setUnisonDetune(float detuneCents);  // 5-25 cents
 
     /**
      * MIDI note handling
@@ -98,6 +99,7 @@ private:
     // Voice pool
     std::array<Voice, MAX_VOICES> voices;
     VoiceMode voiceMode = VoiceMode::Poly;
+    float unisonDetuneAmount = 10.0f;  // Default: ±10 cents
 
     /**
      * Voice allocation helpers

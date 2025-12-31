@@ -25,6 +25,11 @@ void VoiceManager::setVoiceMode(VoiceMode mode)
     voiceMode = mode;
 }
 
+void VoiceManager::setUnisonDetune(float detuneCents)
+{
+    unisonDetuneAmount = detuneCents;
+}
+
 void VoiceManager::noteOn(int midiNote, float velocity)
 {
     // Dispatch to appropriate allocation strategy based on mode
@@ -430,24 +435,24 @@ void VoiceManager::allocateUnisonVoices(int midiNote, float velocity)
     // Silence any voices that might be ringing
     allSoundOff();
 
-    // Trigger all voices with calculated detune amounts
+    // Trigger all voices with calculated detune amounts and random phases
+    // Random phases prevent phaser effect from phase synchronization
     for (int i = 0; i < MAX_VOICES; ++i)
     {
         float detune = calculateUnisonDetune(i);
-        voices[i].noteOn(midiNote, velocity, detune);
+        voices[i].noteOn(midiNote, velocity, detune, true);  // true = randomize phase
     }
 }
 
 float VoiceManager::calculateUnisonDetune(int voiceIndex) const
 {
-    // Spread voices across +/- 25 cents
-    // Creates thick, chorused sound
-    const float MAX_DETUNE_CENTS = 25.0f;
+    // Spread voices across adjustable detune range (5-25 cents)
+    // Creates thick, chorused sound with variable intensity
 
     // Center voice has no detune, others spread symmetrically
-    // Example for 8 voices: -25, -17.86, -10.71, -3.57, +3.57, +10.71, +17.86, +25
-    float step = (MAX_DETUNE_CENTS * 2.0f) / (MAX_VOICES - 1);
-    return -MAX_DETUNE_CENTS + (voiceIndex * step);
+    // Example for 8 voices at ±10 cents: -10, -7.14, -4.29, -1.43, +1.43, +4.29, +7.14, +10
+    float step = (unisonDetuneAmount * 2.0f) / (MAX_VOICES - 1);
+    return -unisonDetuneAmount + (voiceIndex * step);
 }
 
 void VoiceManager::incrementAllAges()

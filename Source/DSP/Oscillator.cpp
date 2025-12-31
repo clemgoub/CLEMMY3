@@ -77,6 +77,13 @@ void Oscillator::reset()
     phase = 0.0;
 }
 
+void Oscillator::setRandomPhase()
+{
+    // Set phase to random value between 0.0 and 1.0
+    // Breaks phase synchronization for more natural unison sound
+    phase = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
+}
+
 // ============================================================================
 // Waveform Generators
 // ============================================================================

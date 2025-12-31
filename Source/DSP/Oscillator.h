@@ -63,6 +63,11 @@ public:
      */
     void reset();
 
+    /**
+     * Set random phase offset (0.0 - 1.0) to break phase synchronization
+     */
+    void setRandomPhase();
+
 private:
     // Oscillator state
     double phase = 0.0;              // Current phase (0.0 to 1.0)
