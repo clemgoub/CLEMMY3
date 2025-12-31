@@ -627,7 +627,7 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     lfo1SyncDivSelector.setSelectedId(6);  // Default: 1/4
 
     addAndMakeVisible(lfo1SyncDivLabel);
-    lfo1SyncDivLabel.setText("Division", juce::dontSendNotification);
+    lfo1SyncDivLabel.setText("Div.", juce::dontSendNotification);
     lfo1SyncDivLabel.setJustificationType(juce::Justification::centred);
 
     lfo1SyncDivAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -659,7 +659,7 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     lfo1DestinationSelector.setSelectedId(1);  // Default: None
 
     addAndMakeVisible(lfo1DestinationLabel);
-    lfo1DestinationLabel.setText("Destination", juce::dontSendNotification);
+    lfo1DestinationLabel.setText("Dest.", juce::dontSendNotification);
     lfo1DestinationLabel.setJustificationType(juce::Justification::centred);
 
     lfo1DestinationAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -732,7 +732,7 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     lfo2SyncDivSelector.setSelectedId(6);  // Default: 1/4
 
     addAndMakeVisible(lfo2SyncDivLabel);
-    lfo2SyncDivLabel.setText("Division", juce::dontSendNotification);
+    lfo2SyncDivLabel.setText("Div.", juce::dontSendNotification);
     lfo2SyncDivLabel.setJustificationType(juce::Justification::centred);
 
     lfo2SyncDivAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -764,7 +764,7 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     lfo2DestinationSelector.setSelectedId(1);  // Default: None
 
     addAndMakeVisible(lfo2DestinationLabel);
-    lfo2DestinationLabel.setText("Destination", juce::dontSendNotification);
+    lfo2DestinationLabel.setText("Dest.", juce::dontSendNotification);
     lfo2DestinationLabel.setJustificationType(juce::Justification::centred);
 
     lfo2DestinationAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -787,26 +787,44 @@ void CLEMMY3AudioProcessorEditor::paint(juce::Graphics& g)
     // Fill background
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    // Draw title
+    // Draw title (non-overlapping with subtitle)
     g.setColour(juce::Colours::white);
     g.setFont(28.0f);
-    g.drawFittedText("CLEMMY3", getLocalBounds().removeFromTop(35), juce::Justification::centred, 1);
+    g.drawFittedText("CLEMMY3", juce::Rectangle<int>(0, 5, getWidth(), 35), juce::Justification::centred, 1);
 
-    // Draw subtitle
-    g.setFont(14.0f);
+    // Draw subtitle (below title, non-overlapping)
+    g.setFont(13.0f);
     g.setColour(juce::Colours::lightgrey);
-    g.drawFittedText("Phase 6: Dual LFO Modulation + MIDI Sync", getLocalBounds().removeFromTop(60), juce::Justification::centred, 1);
+    g.drawFittedText("Phase 6: Dual LFO Modulation + MIDI Sync", juce::Rectangle<int>(0, 42, getWidth(), 25), juce::Justification::centred, 1);
+
+    // Section headers (doubled font size)
+    g.setFont(22.0f);
+    g.setColour(juce::Colours::grey);
+
+    // Top section header (y = 169: after 127px header + 32px voice mode + 10px spacing)
+    g.drawFittedText("OSCILLATORS", juce::Rectangle<int>(15, 169, 540, 20), juce::Justification::centredLeft, 1);
+
+    // MIXER label (aligned with OSCILLATORS)
+    g.drawFittedText("MIXER", juce::Rectangle<int>(570, 169, 260, 20), juce::Justification::centredLeft, 1);
+
+    // FILTER label (drawn in filter's top padding area)
+    // Filter starts at y = 189 + 180 (mixer) + 10 (spacing) = 379
+    g.drawFittedText("FILTER", juce::Rectangle<int>(570, 384, 260, 20), juce::Justification::centredLeft, 1);
+
+    // Bottom section headers (y = 529: after 169 + 20 + 340)
+    g.drawFittedText("ADSR ENVELOPE", juce::Rectangle<int>(15, 529, 360, 20), juce::Justification::centredLeft, 1);
+    g.drawFittedText("MODULATION", juce::Rectangle<int>(395, 529, 690, 20), juce::Justification::centredLeft, 1);
 }
 
 void CLEMMY3AudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 
-    // ========== TITLE AREA ========== (Total: 132px = 90 + 42 extra)
-    area.removeFromTop(75);  // More space for title and subtitle (55 + 20 extra)
+    // ========== TITLE AREA ==========
+    area.removeFromTop(127);  // Increased space for future preset browser (was 80px)
 
     // ========== VOICE MODE SELECTOR ==========
-    auto voiceModeArea = area.removeFromTop(35);  // Increased from 30 to 35
+    auto voiceModeArea = area.removeFromTop(32);
     voiceModeArea.reduce(15, 0);
     // "Mode:" label
     voiceModeLabel.setBounds(voiceModeArea.removeFromLeft(50));
@@ -825,10 +843,13 @@ void CLEMMY3AudioProcessorEditor::resized()
     unisonDetuneLabel.setBounds(voiceModeArea.removeFromLeft(95));  // "Unison detune:" label
     unisonDetuneSelector.setBounds(voiceModeArea.removeFromLeft(80).removeFromTop(25));
 
-    area.removeFromTop(22);  // More spacing (was 5, now 22 to use extra header space)
+    area.removeFromTop(10);  // Spacing
+
+    // ========== SECTION HEADER ROW 1 ==========
+    area.removeFromTop(20);  // Space for section headers (drawn in paint())
 
     // ========== TOP ROW: OSCILLATORS on left | MIXER + FILTER stacked on right ==========
-    auto topRow = area.removeFromTop(350);  // Reduced by 40px (was 390)
+    auto topRow = area.removeFromTop(340);
     topRow.reduce(15, 0);
 
     // --- OSCILLATORS SECTION (left side) ---
@@ -1002,19 +1023,16 @@ void CLEMMY3AudioProcessorEditor::resized()
     filterResonanceLabel.setBounds(resonanceCol.removeFromTop(16));
     filterResonanceSlider.setBounds(resonanceCol);
 
-    // ========== MIDI KEYBOARD (half height, at very bottom) ==========
-    auto keyboardArea = area.removeFromBottom(50);  // Half the previous height, at bottom
-    keyboardArea.reduce(10, 0);
-    midiKeyboard.setBounds(keyboardArea);
+    // ========== SECTION HEADER ROW 2 ==========
+    area.removeFromTop(20);  // Space for section headers (drawn in paint())
 
-    area.removeFromBottom(5);  // Small spacing above keyboard
-
-    // ========== BOTTOM ROW: ADSR | LFO PLACEHOLDER (snug to keyboard) ==========
-    auto bottomRow = area.removeFromBottom(330);  // Increased for LFO MIDI sync controls (was 242)
+    // ========== BOTTOM ROW: ADSR | LFOs ==========
+    auto bottomRow = area.removeFromTop(226);  // Exact size needed (206px content + 20px padding)
     bottomRow.reduce(15, 10);  // Add padding: 15px horizontal, 10px vertical
 
     // --- ADSR ENVELOPE ---
-    auto adsrArea = bottomRow.removeFromLeft(360);
+    // Match height to LFO section: 20 (label) + 5 + 36 (row1) + 12 + 85 (row2) + 12 + 36 (row3) = 206px
+    auto adsrArea = bottomRow.removeFromLeft(360).removeFromTop(206);
 
     int adsrSliderWidth = 80;
     int adsrSpacing = 12;
@@ -1055,78 +1073,105 @@ void CLEMMY3AudioProcessorEditor::resized()
     lfo1Label.setBounds(lfo1Area.removeFromTop(20));
     lfo1Area.removeFromTop(5);
 
-    // Waveform selector
-    lfo1WaveformLabel.setBounds(lfo1Area.removeFromTop(14));
-    lfo1WaveformSelector.setBounds(lfo1Area.removeFromTop(22));
-    lfo1Area.removeFromTop(8);
+    // Row 1: Waveform and Mode selectors side by side
+    auto lfo1Row1 = lfo1Area.removeFromTop(14 + 22);  // Label + selector
+    int lfo1ColWidth = (lfo1Row1.getWidth() - 10) / 2;  // 10px spacing between columns
 
-    // Rate Mode selector
-    lfo1RateModeLabel.setBounds(lfo1Area.removeFromTop(14));
-    lfo1RateModeSelector.setBounds(lfo1Area.removeFromTop(22));
-    lfo1Area.removeFromTop(8);
+    auto lfo1WaveCol = lfo1Row1.removeFromLeft(lfo1ColWidth);
+    lfo1WaveformLabel.setBounds(lfo1WaveCol.removeFromTop(14));
+    lfo1WaveformSelector.setBounds(lfo1WaveCol.removeFromTop(22));
 
-    // Rate and Depth knobs side by side
-    auto lfo1KnobsRow = lfo1Area.removeFromTop(85);
-    int lfo1KnobWidth = (lfo1KnobsRow.getWidth() - 10) / 2;  // 10px spacing
+    lfo1Row1.removeFromLeft(10);  // Spacing
 
-    auto lfo1RateCol = lfo1KnobsRow.removeFromLeft(lfo1KnobWidth);
+    auto lfo1ModeCol = lfo1Row1;
+    lfo1RateModeLabel.setBounds(lfo1ModeCol.removeFromTop(14));
+    lfo1RateModeSelector.setBounds(lfo1ModeCol.removeFromTop(22));
+
+    lfo1Area.removeFromTop(12);  // Spacing between rows
+
+    // Row 2: Rate and Depth knobs side by side
+    auto lfo1Row2 = lfo1Area.removeFromTop(85);
+    int lfo1KnobWidth = (lfo1Row2.getWidth() - 10) / 2;  // 10px spacing
+
+    auto lfo1RateCol = lfo1Row2.removeFromLeft(lfo1KnobWidth);
     lfo1RateLabel.setBounds(lfo1RateCol.removeFromTop(14));
     lfo1RateSlider.setBounds(lfo1RateCol);
 
-    lfo1KnobsRow.removeFromLeft(10);  // Spacing
+    lfo1Row2.removeFromLeft(10);  // Spacing
 
-    auto lfo1DepthCol = lfo1KnobsRow;
+    auto lfo1DepthCol = lfo1Row2;
     lfo1DepthLabel.setBounds(lfo1DepthCol.removeFromTop(14));
     lfo1DepthSlider.setBounds(lfo1DepthCol);
 
-    lfo1Area.removeFromTop(8);
+    lfo1Area.removeFromTop(12);  // Spacing between rows
 
-    // Sync Division selector
-    lfo1SyncDivLabel.setBounds(lfo1Area.removeFromTop(14));
-    lfo1SyncDivSelector.setBounds(lfo1Area.removeFromTop(22));
-    lfo1Area.removeFromTop(8);
+    // Row 3: Division and Destination selectors side by side
+    auto lfo1Row3 = lfo1Area.removeFromTop(14 + 22);  // Label + selector
+    int lfo1Row3ColWidth = (lfo1Row3.getWidth() - 10) / 2;  // 10px spacing
 
-    // Destination selector
-    lfo1DestinationLabel.setBounds(lfo1Area.removeFromTop(14));
-    lfo1DestinationSelector.setBounds(lfo1Area.removeFromTop(22));
+    auto lfo1DivCol = lfo1Row3.removeFromLeft(lfo1Row3ColWidth);
+    lfo1SyncDivLabel.setBounds(lfo1DivCol.removeFromTop(14));
+    lfo1SyncDivSelector.setBounds(lfo1DivCol.removeFromTop(22));
+
+    lfo1Row3.removeFromLeft(10);  // Spacing
+
+    auto lfo1DestCol = lfo1Row3;
+    lfo1DestinationLabel.setBounds(lfo1DestCol.removeFromTop(14));
+    lfo1DestinationSelector.setBounds(lfo1DestCol.removeFromTop(22));
 
     // --- LFO 2 Layout ---
     // LFO 2 Label
     lfo2Label.setBounds(lfo2Area.removeFromTop(20));
     lfo2Area.removeFromTop(5);
 
-    // Waveform selector
-    lfo2WaveformLabel.setBounds(lfo2Area.removeFromTop(14));
-    lfo2WaveformSelector.setBounds(lfo2Area.removeFromTop(22));
-    lfo2Area.removeFromTop(8);
+    // Row 1: Waveform and Mode selectors side by side
+    auto lfo2Row1 = lfo2Area.removeFromTop(14 + 22);  // Label + selector
+    int lfo2ColWidth = (lfo2Row1.getWidth() - 10) / 2;  // 10px spacing between columns
 
-    // Rate Mode selector
-    lfo2RateModeLabel.setBounds(lfo2Area.removeFromTop(14));
-    lfo2RateModeSelector.setBounds(lfo2Area.removeFromTop(22));
-    lfo2Area.removeFromTop(8);
+    auto lfo2WaveCol = lfo2Row1.removeFromLeft(lfo2ColWidth);
+    lfo2WaveformLabel.setBounds(lfo2WaveCol.removeFromTop(14));
+    lfo2WaveformSelector.setBounds(lfo2WaveCol.removeFromTop(22));
 
-    // Rate and Depth knobs side by side
-    auto lfo2KnobsRow = lfo2Area.removeFromTop(85);
-    int lfo2KnobWidth = (lfo2KnobsRow.getWidth() - 10) / 2;  // 10px spacing
+    lfo2Row1.removeFromLeft(10);  // Spacing
 
-    auto lfo2RateCol = lfo2KnobsRow.removeFromLeft(lfo2KnobWidth);
+    auto lfo2ModeCol = lfo2Row1;
+    lfo2RateModeLabel.setBounds(lfo2ModeCol.removeFromTop(14));
+    lfo2RateModeSelector.setBounds(lfo2ModeCol.removeFromTop(22));
+
+    lfo2Area.removeFromTop(12);  // Spacing between rows
+
+    // Row 2: Rate and Depth knobs side by side
+    auto lfo2Row2 = lfo2Area.removeFromTop(85);
+    int lfo2KnobWidth = (lfo2Row2.getWidth() - 10) / 2;  // 10px spacing
+
+    auto lfo2RateCol = lfo2Row2.removeFromLeft(lfo2KnobWidth);
     lfo2RateLabel.setBounds(lfo2RateCol.removeFromTop(14));
     lfo2RateSlider.setBounds(lfo2RateCol);
 
-    lfo2KnobsRow.removeFromLeft(10);  // Spacing
+    lfo2Row2.removeFromLeft(10);  // Spacing
 
-    auto lfo2DepthCol = lfo2KnobsRow;
+    auto lfo2DepthCol = lfo2Row2;
     lfo2DepthLabel.setBounds(lfo2DepthCol.removeFromTop(14));
     lfo2DepthSlider.setBounds(lfo2DepthCol);
 
-    lfo2Area.removeFromTop(8);
+    lfo2Area.removeFromTop(12);  // Spacing between rows
 
-    // Sync Division selector
-    lfo2SyncDivLabel.setBounds(lfo2Area.removeFromTop(14));
-    lfo2SyncDivSelector.setBounds(lfo2Area.removeFromTop(22));
-    lfo2Area.removeFromTop(8);
+    // Row 3: Division and Destination selectors side by side
+    auto lfo2Row3 = lfo2Area.removeFromTop(14 + 22);  // Label + selector
+    int lfo2Row3ColWidth = (lfo2Row3.getWidth() - 10) / 2;  // 10px spacing
 
-    // Destination selector
-    lfo2DestinationLabel.setBounds(lfo2Area.removeFromTop(14));
-    lfo2DestinationSelector.setBounds(lfo2Area.removeFromTop(22));
+    auto lfo2DivCol = lfo2Row3.removeFromLeft(lfo2Row3ColWidth);
+    lfo2SyncDivLabel.setBounds(lfo2DivCol.removeFromTop(14));
+    lfo2SyncDivSelector.setBounds(lfo2DivCol.removeFromTop(22));
+
+    lfo2Row3.removeFromLeft(10);  // Spacing
+
+    auto lfo2DestCol = lfo2Row3;
+    lfo2DestinationLabel.setBounds(lfo2DestCol.removeFromTop(14));
+    lfo2DestinationSelector.setBounds(lfo2DestCol.removeFromTop(22));
+
+    // ========== MIDI KEYBOARD (at very bottom, closer to controls) ==========
+    auto keyboardArea = area.removeFromBottom(93);  // Reasonable size, pushed close to bottom row
+    keyboardArea.reduce(10, 0);
+    midiKeyboard.setBounds(keyboardArea);
 }
