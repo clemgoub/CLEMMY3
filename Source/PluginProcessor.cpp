@@ -206,6 +206,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::StringArray{"None", "Filter Cutoff", "Pitch", "PWM", "Filter Res", "Volume"},
         0));  // Default: None
 
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "lfo1RateMode", "LFO 1 Rate Mode",
+        juce::StringArray{"Free", "Sync"},
+        0));  // Default: Free
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "lfo1SyncDiv", "LFO 1 Sync Division",
+        juce::StringArray{"1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1"},
+        2));  // Default: 1/4
+
     // ==================== LFO 2 PARAMETERS ====================
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
         "lfo2Waveform", "LFO 2 Waveform",
@@ -226,6 +236,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         "lfo2Destination", "LFO 2 Destination",
         juce::StringArray{"None", "Filter Cutoff", "Pitch", "PWM", "Filter Res", "Volume"},
         0));  // Default: None
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "lfo2RateMode", "LFO 2 Rate Mode",
+        juce::StringArray{"Free", "Sync"},
+        0));  // Default: Free
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "lfo2SyncDiv", "LFO 2 Sync Division",
+        juce::StringArray{"1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1"},
+        2));  // Default: 1/4
 
     return { params.begin(), params.end() };
 }
@@ -436,22 +456,47 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     float lfo1Rate = parameters.getRawParameterValue("lfo1Rate")->load();
     float lfo1Depth = parameters.getRawParameterValue("lfo1Depth")->load();
     int lfo1Destination = parameters.getRawParameterValue("lfo1Destination")->load();
+    int lfo1RateModeIndex = parameters.getRawParameterValue("lfo1RateMode")->load();
+    int lfo1SyncDivIndex = parameters.getRawParameterValue("lfo1SyncDiv")->load();
 
     int lfo2WaveformIndex = parameters.getRawParameterValue("lfo2Waveform")->load();
     float lfo2Rate = parameters.getRawParameterValue("lfo2Rate")->load();
     float lfo2Depth = parameters.getRawParameterValue("lfo2Depth")->load();
     int lfo2Destination = parameters.getRawParameterValue("lfo2Destination")->load();
+    int lfo2RateModeIndex = parameters.getRawParameterValue("lfo2RateMode")->load();
+    int lfo2SyncDivIndex = parameters.getRawParameterValue("lfo2SyncDiv")->load();
 
     // Broadcast LFO parameters
     voiceManager.setLFO1Waveform(static_cast<LFO::Waveform>(lfo1WaveformIndex));
     voiceManager.setLFO1Rate(lfo1Rate);
     voiceManager.setLFO1Depth(lfo1Depth);
     voiceManager.setLFO1Destination(lfo1Destination);
+    voiceManager.setLFO1RateMode(static_cast<LFO::RateMode>(lfo1RateModeIndex));
+    voiceManager.setLFO1SyncDivision(static_cast<LFO::SyncDivision>(lfo1SyncDivIndex));
 
     voiceManager.setLFO2Waveform(static_cast<LFO::Waveform>(lfo2WaveformIndex));
     voiceManager.setLFO2Rate(lfo2Rate);
     voiceManager.setLFO2Depth(lfo2Depth);
     voiceManager.setLFO2Destination(lfo2Destination);
+    voiceManager.setLFO2RateMode(static_cast<LFO::RateMode>(lfo2RateModeIndex));
+    voiceManager.setLFO2SyncDivision(static_cast<LFO::SyncDivision>(lfo2SyncDivIndex));
+
+    // Get current BPM from host
+    auto playHead = getPlayHead();
+    if (playHead != nullptr)
+    {
+        if (auto positionInfo = playHead->getPosition())
+        {
+            if (positionInfo->getBpm().hasValue())
+            {
+                currentBPM = static_cast<float>(*positionInfo->getBpm());
+            }
+        }
+    }
+
+    // Update LFO BPM for all voices
+    voiceManager.setLFO1BPM(currentBPM);
+    voiceManager.setLFO2BPM(currentBPM);
 
     // Process MIDI messages (from both sources)
     for (const auto metadata : combinedMidi)

@@ -8,7 +8,7 @@ A vibe-coded triple oscillator subtractive synthesizer plug-in, free for everyon
 
 C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/TripleOscillator) synthesizer, creating a professional VST3/AU plugin for use in any DAW.
 
-**Status:** ✅ Phase 6 Complete - Dual LFO Modulation System
+**Status:** ✅ Phase 6 Complete - Dual LFO Modulation System + MIDI Sync
 
 ## Features
 
@@ -41,7 +41,10 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
 - **📊 Dual LFO Modulation System**
   - 2 independent LFOs per voice (16 total across 8 voices)
   - 5 waveforms: Sine, Triangle, Square, Sawtooth, Sample & Hold
-  - Rate: 0.01 - 20 Hz (logarithmic scaling)
+  - Two rate modes:
+    * Free: 0.01 - 20 Hz (logarithmic scaling)
+    * Sync: MIDI tempo sync with 7 divisions (1/16, 1/8, 1/4, 1/2, 1/1, 2/1, 4/1)
+  - Automatic BPM detection from DAW host
   - Depth: 0.0 - 1.0
   - 6 modulation destinations:
     * Filter Cutoff (±2 octaves)
@@ -85,13 +88,15 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
 
 ## Current Phase: Phase 6 ✅
 
-**Phase 6: Dual LFO Modulation System**
+**Phase 6: Dual LFO Modulation System + MIDI Sync**
 - ✅ LFO engine with 5 waveforms
 - ✅ 2 LFOs per voice (16 total)
 - ✅ 6 modulation destinations (Filter Cutoff/Res, Pitch, PWM, Volume)
 - ✅ Per-sample modulation with phase reset on note-on
 - ✅ Complete UI with dual LFO sections
 - ✅ All modulation destinations tested and verified
+- ✅ LFO MIDI sync with tempo-based divisions (1/16 to 4/1)
+- ✅ Automatic BPM detection from DAW host
 
 ## Technical Highlights
 
@@ -109,8 +114,8 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
   - Thread-safe parameter updates via AudioProcessorValueTreeState
 
 - **Parameters:**
-  - 45 total parameters (fully automatable in DAW)
-  - 2 voice mode (mode + unison detune), 18 oscillator params, 4 ADSR, 3 noise, 1 master volume, 3 filter, 8 LFO1, 8 LFO2
+  - 49 total parameters (fully automatable in DAW)
+  - 2 voice mode (mode + unison detune), 18 oscillator params, 4 ADSR, 3 noise, 1 master volume, 3 filter, 10 LFO1, 10 LFO2
 
 ## Building
 

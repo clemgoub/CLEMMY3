@@ -78,11 +78,17 @@ public:
     void setLFO1Rate(float rateHz);
     void setLFO1Depth(float depth);
     void setLFO1Destination(int dest);
+    void setLFO1RateMode(LFO::RateMode mode);
+    void setLFO1SyncDivision(LFO::SyncDivision division);
+    void setLFO1BPM(float bpm);
 
     void setLFO2Waveform(LFO::Waveform waveform);
     void setLFO2Rate(float rateHz);
     void setLFO2Depth(float depth);
     void setLFO2Destination(int dest);
+    void setLFO2RateMode(LFO::RateMode mode);
+    void setLFO2SyncDivision(LFO::SyncDivision division);
+    void setLFO2BPM(float bpm);
 
     /**
      * Audio generation

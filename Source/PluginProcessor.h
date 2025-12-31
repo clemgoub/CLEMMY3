@@ -61,6 +61,9 @@ private:
     // Phase 3: Polyphonic voice management
     VoiceManager voiceManager;
 
+    // Host tempo for LFO MIDI sync
+    float currentBPM = 120.0f;          // Tempo from host
+
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CLEMMY3AudioProcessor)

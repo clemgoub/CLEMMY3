@@ -79,11 +79,17 @@ public:
     void setLFO1Rate(float rateHz);              // 0.01 - 20 Hz
     void setLFO1Depth(float depth);              // 0.0 - 1.0
     void setLFO1Destination(int dest);           // Modulation target
+    void setLFO1RateMode(LFO::RateMode mode);    // Free or Sync
+    void setLFO1SyncDivision(LFO::SyncDivision division);  // 1/16, 1/8, 1/4, etc.
+    void setLFO1BPM(float bpm);                  // For MIDI sync
 
     void setLFO2Waveform(LFO::Waveform waveform);
     void setLFO2Rate(float rateHz);              // 0.01 - 20 Hz
     void setLFO2Depth(float depth);              // 0.0 - 1.0
     void setLFO2Destination(int dest);           // Modulation target
+    void setLFO2RateMode(LFO::RateMode mode);    // Free or Sync
+    void setLFO2SyncDivision(LFO::SyncDivision division);  // 1/16, 1/8, 1/4, etc.
+    void setLFO2BPM(float bpm);                  // For MIDI sync
 
     /**
      * Audio generation

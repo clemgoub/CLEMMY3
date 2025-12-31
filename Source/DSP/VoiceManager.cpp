@@ -274,6 +274,54 @@ void VoiceManager::setLFO2Destination(int dest)
     }
 }
 
+void VoiceManager::setLFO1RateMode(LFO::RateMode mode)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO1RateMode(mode);
+    }
+}
+
+void VoiceManager::setLFO1SyncDivision(LFO::SyncDivision division)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO1SyncDivision(division);
+    }
+}
+
+void VoiceManager::setLFO1BPM(float bpm)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO1BPM(bpm);
+    }
+}
+
+void VoiceManager::setLFO2RateMode(LFO::RateMode mode)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO2RateMode(mode);
+    }
+}
+
+void VoiceManager::setLFO2SyncDivision(LFO::SyncDivision division)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO2SyncDivision(division);
+    }
+}
+
+void VoiceManager::setLFO2BPM(float bpm)
+{
+    for (auto& voice : voices)
+    {
+        voice.setLFO2BPM(bpm);
+    }
+}
+
 //==============================================================================
 // Audio Generation
 //==============================================================================

@@ -231,6 +231,36 @@ void Voice::setLFO2Destination(int dest)
     lfo2Destination = static_cast<ModDestination>(dest);
 }
 
+void Voice::setLFO1RateMode(LFO::RateMode mode)
+{
+    lfo1.setRateMode(mode);
+}
+
+void Voice::setLFO1SyncDivision(LFO::SyncDivision division)
+{
+    lfo1.setSyncDivision(division);
+}
+
+void Voice::setLFO1BPM(float bpm)
+{
+    lfo1.setBPM(bpm);
+}
+
+void Voice::setLFO2RateMode(LFO::RateMode mode)
+{
+    lfo2.setRateMode(mode);
+}
+
+void Voice::setLFO2SyncDivision(LFO::SyncDivision division)
+{
+    lfo2.setSyncDivision(division);
+}
+
+void Voice::setLFO2BPM(float bpm)
+{
+    lfo2.setBPM(bpm);
+}
+
 //==============================================================================
 // Audio Processing
 //==============================================================================

@@ -37,6 +37,24 @@ void LFO::setDepth(float d)
     depth = std::clamp(d, 0.0f, 1.0f);
 }
 
+void LFO::setRateMode(RateMode mode)
+{
+    rateMode = mode;
+    updatePhaseIncrement();
+}
+
+void LFO::setSyncDivision(SyncDivision division)
+{
+    syncDivision = division;
+    updatePhaseIncrement();
+}
+
+void LFO::setBPM(float newBPM)
+{
+    bpm = std::clamp(newBPM, 20.0f, 300.0f);
+    updatePhaseIncrement();
+}
+
 float LFO::processSample()
 {
     float value = 0.0f;
@@ -135,8 +153,37 @@ float LFO::generateSampleAndHold()
     return sampleAndHoldValue;
 }
 
+float LFO::getEffectiveRate() const
+{
+    if (rateMode == Free)
+    {
+        return rate;
+    }
+    else  // Sync mode
+    {
+        // MIDI sync - convert division to Hz based on BPM
+        // beats_per_cycle = how many beats for one complete LFO cycle
+        float beatsPerCycle = 1.0f;
+
+        switch (syncDivision)
+        {
+            case Div_1_16: beatsPerCycle = 0.25f; break;  // 1/16 note = 1 cycle per quarter beat (fast)
+            case Div_1_8:  beatsPerCycle = 0.5f;  break;  // 1/8 note = 1 cycle per half beat
+            case Div_1_4:  beatsPerCycle = 1.0f;  break;  // 1/4 note = 1 cycle per beat
+            case Div_1_2:  beatsPerCycle = 2.0f;  break;  // 1/2 note = 1 cycle per 2 beats
+            case Div_1_1:  beatsPerCycle = 4.0f;  break;  // Whole note = 1 cycle per 4 beats
+            case Div_2_1:  beatsPerCycle = 8.0f;  break;  // 2 bars = 1 cycle per 8 beats
+            case Div_4_1:  beatsPerCycle = 16.0f; break;  // 4 bars = 1 cycle per 16 beats (slow)
+        }
+
+        // Convert BPM to Hz: (beats per minute / 60) / beats per cycle
+        return (bpm / 60.0f) / beatsPerCycle;
+    }
+}
+
 void LFO::updatePhaseIncrement()
 {
     // Phase increment per sample = frequency / sample rate
-    phaseIncrement = rate / static_cast<float>(sampleRate);
+    float effectiveRate = getEffectiveRate();
+    phaseIncrement = effectiveRate / static_cast<float>(sampleRate);
 }
