@@ -10,7 +10,7 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     // Top row: Oscillators | Mixer | Filter
     // Bottom row: ADSR | LFO placeholder
     // Very bottom: MIDI keyboard
-    setSize(1100, 780);  // Increased height for better ADSR fit
+    setSize(1100, 868);  // Increased height for LFO MIDI sync controls
 
     // ========== VOICE MODE ==========
     // Mode label
@@ -583,6 +583,19 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     lfo1WaveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.parameters, "lfo1Waveform", lfo1WaveformSelector);
 
+    // LFO 1 Rate Mode selector
+    addAndMakeVisible(lfo1RateModeSelector);
+    lfo1RateModeSelector.addItem("Free", 1);
+    lfo1RateModeSelector.addItem("Sync", 2);
+    lfo1RateModeSelector.setSelectedId(1);  // Default: Free
+
+    addAndMakeVisible(lfo1RateModeLabel);
+    lfo1RateModeLabel.setText("Mode", juce::dontSendNotification);
+    lfo1RateModeLabel.setJustificationType(juce::Justification::centred);
+
+    lfo1RateModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.parameters, "lfo1RateMode", lfo1RateModeSelector);
+
     // LFO 1 Rate knob
     addAndMakeVisible(lfo1RateSlider);
     lfo1RateSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -598,6 +611,27 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
 
     lfo1RateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "lfo1Rate", lfo1RateSlider);
+
+    // LFO 1 Sync Division selector
+    addAndMakeVisible(lfo1SyncDivSelector);
+    lfo1SyncDivSelector.addItem("1/128", 1);
+    lfo1SyncDivSelector.addItem("1/64", 2);
+    lfo1SyncDivSelector.addItem("1/32", 3);
+    lfo1SyncDivSelector.addItem("1/16", 4);
+    lfo1SyncDivSelector.addItem("1/8", 5);
+    lfo1SyncDivSelector.addItem("1/4", 6);
+    lfo1SyncDivSelector.addItem("1/2", 7);
+    lfo1SyncDivSelector.addItem("1/1", 8);
+    lfo1SyncDivSelector.addItem("2/1", 9);
+    lfo1SyncDivSelector.addItem("4/1", 10);
+    lfo1SyncDivSelector.setSelectedId(6);  // Default: 1/4
+
+    addAndMakeVisible(lfo1SyncDivLabel);
+    lfo1SyncDivLabel.setText("Division", juce::dontSendNotification);
+    lfo1SyncDivLabel.setJustificationType(juce::Justification::centred);
+
+    lfo1SyncDivAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.parameters, "lfo1SyncDiv", lfo1SyncDivSelector);
 
     // LFO 1 Depth knob
     addAndMakeVisible(lfo1DepthSlider);
@@ -654,6 +688,19 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     lfo2WaveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.parameters, "lfo2Waveform", lfo2WaveformSelector);
 
+    // LFO 2 Rate Mode selector
+    addAndMakeVisible(lfo2RateModeSelector);
+    lfo2RateModeSelector.addItem("Free", 1);
+    lfo2RateModeSelector.addItem("Sync", 2);
+    lfo2RateModeSelector.setSelectedId(1);  // Default: Free
+
+    addAndMakeVisible(lfo2RateModeLabel);
+    lfo2RateModeLabel.setText("Mode", juce::dontSendNotification);
+    lfo2RateModeLabel.setJustificationType(juce::Justification::centred);
+
+    lfo2RateModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.parameters, "lfo2RateMode", lfo2RateModeSelector);
+
     // LFO 2 Rate knob
     addAndMakeVisible(lfo2RateSlider);
     lfo2RateSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -669,6 +716,27 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
 
     lfo2RateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "lfo2Rate", lfo2RateSlider);
+
+    // LFO 2 Sync Division selector
+    addAndMakeVisible(lfo2SyncDivSelector);
+    lfo2SyncDivSelector.addItem("1/128", 1);
+    lfo2SyncDivSelector.addItem("1/64", 2);
+    lfo2SyncDivSelector.addItem("1/32", 3);
+    lfo2SyncDivSelector.addItem("1/16", 4);
+    lfo2SyncDivSelector.addItem("1/8", 5);
+    lfo2SyncDivSelector.addItem("1/4", 6);
+    lfo2SyncDivSelector.addItem("1/2", 7);
+    lfo2SyncDivSelector.addItem("1/1", 8);
+    lfo2SyncDivSelector.addItem("2/1", 9);
+    lfo2SyncDivSelector.addItem("4/1", 10);
+    lfo2SyncDivSelector.setSelectedId(6);  // Default: 1/4
+
+    addAndMakeVisible(lfo2SyncDivLabel);
+    lfo2SyncDivLabel.setText("Division", juce::dontSendNotification);
+    lfo2SyncDivLabel.setJustificationType(juce::Justification::centred);
+
+    lfo2SyncDivAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.parameters, "lfo2SyncDiv", lfo2SyncDivSelector);
 
     // LFO 2 Depth knob
     addAndMakeVisible(lfo2DepthSlider);
@@ -727,24 +795,7 @@ void CLEMMY3AudioProcessorEditor::paint(juce::Graphics& g)
     // Draw subtitle
     g.setFont(14.0f);
     g.setColour(juce::Colours::lightgrey);
-    g.drawFittedText("Phase 6: Dual LFO Modulation", getLocalBounds().removeFromTop(60), juce::Justification::centred, 1);
-
-    // ========== SECTION BORDERS FOR REFERENCE ==========
-    g.setColour(juce::Colours::yellow.withAlpha(0.5f));
-
-    // Header section (title + voice mode)
-    g.drawRect(0, 0, getWidth(), 132, 2);  // 132px
-
-    // Row 1: Oscillators + Mixer + Filter (reduced by 40px)
-    g.drawRect(0, 132, getWidth(), 350, 2);  // 390 - 40 = 350px
-
-    // Row 2: ADSR + LFO placeholder (increased by 40px)
-    int keyboardTop = getHeight() - 50;  // Keyboard is 50px tall at bottom
-    int row2Top = keyboardTop - 5 - 242;  // 5px spacing + 242px row (202 + 40)
-    g.drawRect(0, row2Top, getWidth(), 242, 2);
-
-    // Keyboard section
-    g.drawRect(0, keyboardTop, getWidth(), 50, 2);
+    g.drawFittedText("Phase 6: Dual LFO Modulation + MIDI Sync", getLocalBounds().removeFromTop(60), juce::Justification::centred, 1);
 }
 
 void CLEMMY3AudioProcessorEditor::resized()
@@ -959,7 +1010,7 @@ void CLEMMY3AudioProcessorEditor::resized()
     area.removeFromBottom(5);  // Small spacing above keyboard
 
     // ========== BOTTOM ROW: ADSR | LFO PLACEHOLDER (snug to keyboard) ==========
-    auto bottomRow = area.removeFromBottom(242);  // Increased by 40px (was 202)
+    auto bottomRow = area.removeFromBottom(330);  // Increased for LFO MIDI sync controls (was 242)
     bottomRow.reduce(15, 10);  // Add padding: 15px horizontal, 10px vertical
 
     // --- ADSR ENVELOPE ---
@@ -1009,6 +1060,11 @@ void CLEMMY3AudioProcessorEditor::resized()
     lfo1WaveformSelector.setBounds(lfo1Area.removeFromTop(22));
     lfo1Area.removeFromTop(8);
 
+    // Rate Mode selector
+    lfo1RateModeLabel.setBounds(lfo1Area.removeFromTop(14));
+    lfo1RateModeSelector.setBounds(lfo1Area.removeFromTop(22));
+    lfo1Area.removeFromTop(8);
+
     // Rate and Depth knobs side by side
     auto lfo1KnobsRow = lfo1Area.removeFromTop(85);
     int lfo1KnobWidth = (lfo1KnobsRow.getWidth() - 10) / 2;  // 10px spacing
@@ -1025,6 +1081,11 @@ void CLEMMY3AudioProcessorEditor::resized()
 
     lfo1Area.removeFromTop(8);
 
+    // Sync Division selector
+    lfo1SyncDivLabel.setBounds(lfo1Area.removeFromTop(14));
+    lfo1SyncDivSelector.setBounds(lfo1Area.removeFromTop(22));
+    lfo1Area.removeFromTop(8);
+
     // Destination selector
     lfo1DestinationLabel.setBounds(lfo1Area.removeFromTop(14));
     lfo1DestinationSelector.setBounds(lfo1Area.removeFromTop(22));
@@ -1037,6 +1098,11 @@ void CLEMMY3AudioProcessorEditor::resized()
     // Waveform selector
     lfo2WaveformLabel.setBounds(lfo2Area.removeFromTop(14));
     lfo2WaveformSelector.setBounds(lfo2Area.removeFromTop(22));
+    lfo2Area.removeFromTop(8);
+
+    // Rate Mode selector
+    lfo2RateModeLabel.setBounds(lfo2Area.removeFromTop(14));
+    lfo2RateModeSelector.setBounds(lfo2Area.removeFromTop(22));
     lfo2Area.removeFromTop(8);
 
     // Rate and Depth knobs side by side
@@ -1053,6 +1119,11 @@ void CLEMMY3AudioProcessorEditor::resized()
     lfo2DepthLabel.setBounds(lfo2DepthCol.removeFromTop(14));
     lfo2DepthSlider.setBounds(lfo2DepthCol);
 
+    lfo2Area.removeFromTop(8);
+
+    // Sync Division selector
+    lfo2SyncDivLabel.setBounds(lfo2Area.removeFromTop(14));
+    lfo2SyncDivSelector.setBounds(lfo2Area.removeFromTop(22));
     lfo2Area.removeFromTop(8);
 
     // Destination selector

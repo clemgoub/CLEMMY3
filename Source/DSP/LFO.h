@@ -28,7 +28,10 @@ public:
 
     enum SyncDivision
     {
-        Div_1_16 = 0,  // 1/16 note
+        Div_1_128 = 0, // 1/128 note
+        Div_1_64,      // 1/64 note
+        Div_1_32,      // 1/32 note
+        Div_1_16,      // 1/16 note
         Div_1_8,       // 1/8 note
         Div_1_4,       // 1/4 note
         Div_1_2,       // 1/2 note

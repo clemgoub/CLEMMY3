@@ -213,8 +213,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
 
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
         "lfo1SyncDiv", "LFO 1 Sync Division",
-        juce::StringArray{"1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1"},
-        2));  // Default: 1/4
+        juce::StringArray{"1/128", "1/64", "1/32", "1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1"},
+        5));  // Default: 1/4 (index 5)
 
     // ==================== LFO 2 PARAMETERS ====================
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
@@ -244,8 +244,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
 
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
         "lfo2SyncDiv", "LFO 2 Sync Division",
-        juce::StringArray{"1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1"},
-        2));  // Default: 1/4
+        juce::StringArray{"1/128", "1/64", "1/32", "1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1"},
+        5));  // Default: 1/4 (index 5)
 
     return { params.begin(), params.end() };
 }

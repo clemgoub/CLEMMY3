@@ -110,8 +110,12 @@ private:
     juce::Label lfo1Label;
     juce::ComboBox lfo1WaveformSelector;
     juce::Label lfo1WaveformLabel;
+    juce::ComboBox lfo1RateModeSelector;
+    juce::Label lfo1RateModeLabel;
     juce::Slider lfo1RateSlider;
     juce::Label lfo1RateLabel;
+    juce::ComboBox lfo1SyncDivSelector;
+    juce::Label lfo1SyncDivLabel;
     juce::Slider lfo1DepthSlider;
     juce::Label lfo1DepthLabel;
     juce::ComboBox lfo1DestinationSelector;
@@ -121,8 +125,12 @@ private:
     juce::Label lfo2Label;
     juce::ComboBox lfo2WaveformSelector;
     juce::Label lfo2WaveformLabel;
+    juce::ComboBox lfo2RateModeSelector;
+    juce::Label lfo2RateModeLabel;
     juce::Slider lfo2RateSlider;
     juce::Label lfo2RateLabel;
+    juce::ComboBox lfo2SyncDivSelector;
+    juce::Label lfo2SyncDivLabel;
     juce::Slider lfo2DepthSlider;
     juce::Label lfo2DepthLabel;
     juce::ComboBox lfo2DestinationSelector;
@@ -172,13 +180,17 @@ private:
 
     // LFO 1
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo1WaveformAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo1RateModeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfo1RateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo1SyncDivAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfo1DepthAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo1DestinationAttachment;
 
     // LFO 2
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo2WaveformAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo2RateModeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfo2RateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo2SyncDivAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfo2DepthAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> lfo2DestinationAttachment;
 

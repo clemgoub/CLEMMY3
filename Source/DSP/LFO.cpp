@@ -167,13 +167,16 @@ float LFO::getEffectiveRate() const
 
         switch (syncDivision)
         {
-            case Div_1_16: beatsPerCycle = 0.25f; break;  // 1/16 note = 1 cycle per quarter beat (fast)
-            case Div_1_8:  beatsPerCycle = 0.5f;  break;  // 1/8 note = 1 cycle per half beat
-            case Div_1_4:  beatsPerCycle = 1.0f;  break;  // 1/4 note = 1 cycle per beat
-            case Div_1_2:  beatsPerCycle = 2.0f;  break;  // 1/2 note = 1 cycle per 2 beats
-            case Div_1_1:  beatsPerCycle = 4.0f;  break;  // Whole note = 1 cycle per 4 beats
-            case Div_2_1:  beatsPerCycle = 8.0f;  break;  // 2 bars = 1 cycle per 8 beats
-            case Div_4_1:  beatsPerCycle = 16.0f; break;  // 4 bars = 1 cycle per 16 beats (slow)
+            case Div_1_128: beatsPerCycle = 0.03125f; break;  // 1/128 note = 1/32 of a quarter beat (very fast)
+            case Div_1_64:  beatsPerCycle = 0.0625f;  break;  // 1/64 note = 1/16 of a quarter beat
+            case Div_1_32:  beatsPerCycle = 0.125f;   break;  // 1/32 note = 1/8 of a quarter beat
+            case Div_1_16:  beatsPerCycle = 0.25f;    break;  // 1/16 note = 1/4 of a quarter beat
+            case Div_1_8:   beatsPerCycle = 0.5f;     break;  // 1/8 note = 1/2 of a quarter beat
+            case Div_1_4:   beatsPerCycle = 1.0f;     break;  // 1/4 note = 1 beat
+            case Div_1_2:   beatsPerCycle = 2.0f;     break;  // 1/2 note = 2 beats
+            case Div_1_1:   beatsPerCycle = 4.0f;     break;  // Whole note = 4 beats
+            case Div_2_1:   beatsPerCycle = 8.0f;     break;  // 2 bars = 8 beats
+            case Div_4_1:   beatsPerCycle = 16.0f;    break;  // 4 bars = 16 beats (slow)
         }
 
         // Convert BPM to Hz: (beats per minute / 60) / beats per cycle
