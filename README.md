@@ -19,6 +19,7 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
   - 5 waveforms per oscillator: Sine, Sawtooth, Square, Triangle, Noise
   - Individual enable/disable, gain, detune (±100 cents), octave shift (-3 to +3)
   - Pulse width modulation (1-99%) for square waves with PolyBLEP anti-aliasing
+  - **Per-oscillator drive/saturation (1.0-10.0)** - Analog-style tanh waveshaping for warm harmonics
   - Post-mixer envelope architecture for efficiency
 
 - **🎚️ 8-Voice Polyphony**
@@ -68,9 +69,24 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
   - Independent gain control
   - Mixed like a 4th oscillator
 
+- **💾 Preset System**
+  - 9 factory presets organized by category:
+    * [INIT] Init - Clean starting point
+    * [SYNTH] Classic Analog - Warm vintage character
+    * [BASS] Bass Monster - Deep sub bass
+    * [PAD] Lush Pad - Evolving pad with PWM
+    * [LEAD] Lead Synth - Bright monophonic lead
+    * [SYNTH] Pluck - Percussive pluck sound
+    * [LEAD] Highway 1 - Dual saw lead with filter modulation
+    * [PAD] Whimsical Pad - Slow-attack pad with dual LFO modulation
+    * [LEAD] SuperSaw I - Massive unison lead with heavy saturation
+  - Save/load user presets to disk
+  - Next/Previous preset navigation
+  - Full parameter state management
+
 - **🖥️ Clean Minimal GUI**
   - 1100×750px window optimized for workflow
-  - Triple oscillator controls (waveform, detune, octave, PWM)
+  - Triple oscillator controls (waveform, detune, octave, PWM, drive)
   - Mixer section (3 oscillators + noise + master volume)
   - Filter section (mode buttons, cutoff, resonance)
   - ADSR envelope sliders
@@ -80,7 +96,6 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
 
 ### 🚧 Planned for Future Phases
 
-- 💾 Preset system with save/load functionality
 - 🎨 Enhanced GUI with custom graphics and visualizations
 - 🔧 Additional modulation routing options
 - 📈 Oscilloscope/spectrum analyzer
@@ -114,8 +129,8 @@ C++/JUCE port of the [Python Triple Oscillator](https://github.com/clemgoub/Trip
   - Thread-safe parameter updates via AudioProcessorValueTreeState
 
 - **Parameters:**
-  - 49 total parameters (fully automatable in DAW)
-  - 2 voice mode (mode + unison detune), 18 oscillator params, 4 ADSR, 3 noise, 1 master volume, 3 filter, 10 LFO1, 10 LFO2
+  - 52 total parameters (fully automatable in DAW)
+  - 2 voice (mode + unison detune), 21 oscillator params (6 × 3 + 3 drive), 4 ADSR, 3 noise, 1 master volume, 3 filter, 10 LFO1, 10 LFO2
 
 ## Building
 
@@ -184,12 +199,13 @@ For detailed build instructions, see [BUILD_GUIDE.md](Docs/BUILD_GUIDE.md)
 ```
 CLEMMY3/
 ├── Source/              # C++ source code
-│   ├── PluginProcessor.cpp/h    # Main audio engine & parameters
+│   ├── PluginProcessor.cpp/h    # Main audio engine & parameters (52 total)
 │   ├── PluginEditor.cpp/h       # GUI implementation
+│   ├── PresetManager.cpp/h      # Preset system (9 factory presets + user presets)
 │   └── DSP/                     # DSP components
 │       ├── Oscillator.cpp/h     # PolyBLEP oscillator (5 waveforms)
 │       ├── Envelope.cpp/h       # ADSR envelope generator
-│       ├── Voice.cpp/h          # Single voice (3 oscillators + envelope + filter + 2 LFOs)
+│       ├── Voice.cpp/h          # Single voice (3 oscillators + drive + filter + envelope + 2 LFOs)
 │       ├── VoiceManager.cpp/h   # 8-voice polyphony & voice stealing
 │       ├── MoogFilter.cpp/h     # 4-pole Moog ladder filter
 │       ├── LFO.cpp/h            # Low-frequency oscillator
@@ -198,6 +214,7 @@ CLEMMY3/
 ├── Assets/              # Plugin assets
 │   └── Icons/           # App icons
 ├── Docs/                # Documentation
+├── Presets/             # User preset storage location
 ├── build/               # Build output
 └── reference-python/    # Original Python implementation
 ```

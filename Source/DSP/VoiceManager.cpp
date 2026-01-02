@@ -137,6 +137,14 @@ void VoiceManager::setOscillatorPulseWidth(int oscIndex, float pw)
     }
 }
 
+void VoiceManager::setOscillatorDrive(int oscIndex, float drive)
+{
+    for (auto& voice : voices)
+    {
+        voice.setOscillatorDrive(oscIndex, drive);
+    }
+}
+
 //==============================================================================
 // Noise Parameter Broadcasting
 //==============================================================================

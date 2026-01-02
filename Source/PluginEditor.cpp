@@ -49,6 +49,9 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
             audioProcessor.parameters.getParameter("voiceMode")->setValueNotifyingHost(1.0f);
     };
 
+    // Add listener to update button states when parameter changes (e.g., from preset load)
+    audioProcessor.parameters.addParameterListener("voiceMode", this);
+
     // Unison Detune selector
     addAndMakeVisible(unisonDetuneSelector);
     unisonDetuneSelector.addItem("5 ct", 1);
@@ -66,6 +69,55 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
 
     unisonDetuneAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.parameters, "unisonDetune", unisonDetuneSelector);
+
+    // ========== PRESET BROWSER ==========
+    addAndMakeVisible(presetLabel);
+    presetLabel.setText("Preset:", juce::dontSendNotification);
+    presetLabel.setJustificationType(juce::Justification::centredRight);
+
+    addAndMakeVisible(presetSelector);
+    presetSelector.onChange = [this]() {
+        int selectedIndex = presetSelector.getSelectedItemIndex();
+        if (selectedIndex >= 0)
+        {
+            audioProcessor.getPresetManager().loadPreset(selectedIndex);
+        }
+    };
+
+    addAndMakeVisible(presetPreviousButton);
+    presetPreviousButton.setButtonText("<");
+    presetPreviousButton.onClick = [this]() {
+        audioProcessor.getPresetManager().loadPreviousPreset();
+        updatePresetSelector();
+    };
+
+    addAndMakeVisible(presetNextButton);
+    presetNextButton.setButtonText(">");
+    presetNextButton.onClick = [this]() {
+        audioProcessor.getPresetManager().loadNextPreset();
+        updatePresetSelector();
+    };
+
+    addAndMakeVisible(presetSaveButton);
+    presetSaveButton.setButtonText("Save");
+    presetSaveButton.onClick = [this]() {
+        savePresetDialog();
+    };
+
+    addAndMakeVisible(presetDeleteButton);
+    presetDeleteButton.setButtonText("Delete");
+    presetDeleteButton.onClick = [this]() {
+        auto& pm = audioProcessor.getPresetManager();
+        int currentIndex = pm.getCurrentPresetIndex();
+        if (!pm.isFactoryPreset(currentIndex))
+        {
+            pm.deleteUserPreset(currentIndex);
+            updatePresetSelector();
+        }
+    };
+
+    // Initialize preset selector
+    updatePresetSelector();
 
     // ========== OSCILLATOR 1 CONTROLS ==========
     // Enable button
@@ -170,6 +222,18 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     osc1PWAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "osc1PW", osc1PWSlider);
 
+    // Drive knob
+    addAndMakeVisible(osc1DriveSlider);
+    osc1DriveSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    osc1DriveSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+
+    addAndMakeVisible(osc1DriveLabel);
+    osc1DriveLabel.setText("DRIVE", juce::dontSendNotification);
+    osc1DriveLabel.setJustificationType(juce::Justification::centred);
+
+    osc1DriveAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "osc1Drive", osc1DriveSlider);
+
     // ========== OSCILLATOR 2 CONTROLS ==========
     // Enable button
     addAndMakeVisible(osc2EnableButton);
@@ -273,6 +337,18 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
     osc2PWAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "osc2PW", osc2PWSlider);
 
+    // Drive knob
+    addAndMakeVisible(osc2DriveSlider);
+    osc2DriveSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    osc2DriveSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+
+    addAndMakeVisible(osc2DriveLabel);
+    osc2DriveLabel.setText("DRIVE", juce::dontSendNotification);
+    osc2DriveLabel.setJustificationType(juce::Justification::centred);
+
+    osc2DriveAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "osc2Drive", osc2DriveSlider);
+
     // ========== OSCILLATOR 3 CONTROLS ==========
     // Enable button
     addAndMakeVisible(osc3EnableButton);
@@ -375,6 +451,18 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
 
     osc3PWAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.parameters, "osc3PW", osc3PWSlider);
+
+    // Drive knob
+    addAndMakeVisible(osc3DriveSlider);
+    osc3DriveSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    osc3DriveSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+
+    addAndMakeVisible(osc3DriveLabel);
+    osc3DriveLabel.setText("DRIVE", juce::dontSendNotification);
+    osc3DriveLabel.setJustificationType(juce::Justification::centred);
+
+    osc3DriveAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "osc3Drive", osc3DriveSlider);
 
     // ========== MIXER CONTROLS (NOISE) ==========
     // Noise label
@@ -779,9 +867,36 @@ CLEMMY3AudioProcessorEditor::CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor& 
 
 CLEMMY3AudioProcessorEditor::~CLEMMY3AudioProcessorEditor()
 {
+    audioProcessor.parameters.removeParameterListener("voiceMode", this);
 }
 
 //==============================================================================
+void CLEMMY3AudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if (parameterID == "voiceMode")
+    {
+        // Update button states based on parameter value
+        // voiceMode: 0 = Mono, 1 = Poly, 2 = Unison
+        juce::MessageManager::callAsync([this, newValue]()
+        {
+            int modeIndex = juce::roundToInt(newValue);
+
+            if (modeIndex == 0)  // Mono
+            {
+                voiceModeMonoButton.setToggleState(true, juce::dontSendNotification);
+            }
+            else if (modeIndex == 1)  // Poly
+            {
+                voiceModePolyButton.setToggleState(true, juce::dontSendNotification);
+            }
+            else  // Unison (2)
+            {
+                voiceModeUnisonButton.setToggleState(true, juce::dontSendNotification);
+            }
+        });
+    }
+}
+
 void CLEMMY3AudioProcessorEditor::paint(juce::Graphics& g)
 {
     // Fill background
@@ -823,25 +938,55 @@ void CLEMMY3AudioProcessorEditor::resized()
     // ========== TITLE AREA ==========
     area.removeFromTop(127);  // Increased space for future preset browser (was 80px)
 
-    // ========== VOICE MODE SELECTOR ==========
-    auto voiceModeArea = area.removeFromTop(32);
-    voiceModeArea.reduce(15, 0);
+    // ========== VOICE MODE SELECTOR & PRESET BROWSER (same row) ==========
+    auto controlRow = area.removeFromTop(38);  // Taller row for better button visibility
+    controlRow.reduce(15, 0);
+
+    // --- Left side: Voice Mode ---
     // "Mode:" label
-    voiceModeLabel.setBounds(voiceModeArea.removeFromLeft(50));
-    voiceModeArea.removeFromLeft(5);
+    voiceModeLabel.setBounds(controlRow.removeFromLeft(50));
+    controlRow.removeFromLeft(5);
+
     // Three buttons: MONO | POLY | UNI
     int modeBtnWidth = 50;
+    int modeBtnHeight = 30;
     int modeBtnSpacing = 5;
-    voiceModeMonoButton.setBounds(voiceModeArea.removeFromLeft(modeBtnWidth));
-    voiceModeArea.removeFromLeft(modeBtnSpacing);
-    voiceModePolyButton.setBounds(voiceModeArea.removeFromLeft(modeBtnWidth));
-    voiceModeArea.removeFromLeft(modeBtnSpacing);
-    voiceModeUnisonButton.setBounds(voiceModeArea.removeFromLeft(modeBtnWidth));
+    voiceModeMonoButton.setBounds(controlRow.removeFromLeft(modeBtnWidth).removeFromTop(modeBtnHeight));
+    controlRow.removeFromLeft(modeBtnSpacing);
+    voiceModePolyButton.setBounds(controlRow.removeFromLeft(modeBtnWidth).removeFromTop(modeBtnHeight));
+    controlRow.removeFromLeft(modeBtnSpacing);
+    voiceModeUnisonButton.setBounds(controlRow.removeFromLeft(modeBtnWidth).removeFromTop(modeBtnHeight));
 
-    // Unison Detune selector (after buttons) - label and dropdown on same line
-    voiceModeArea.removeFromLeft(20);  // Spacing
-    unisonDetuneLabel.setBounds(voiceModeArea.removeFromLeft(95));  // "Unison detune:" label
-    unisonDetuneSelector.setBounds(voiceModeArea.removeFromLeft(80).removeFromTop(25));
+    // Unison Detune selector
+    controlRow.removeFromLeft(15);
+    unisonDetuneLabel.setBounds(controlRow.removeFromLeft(95));
+    unisonDetuneSelector.setBounds(controlRow.removeFromLeft(80).removeFromTop(28));
+
+    controlRow.removeFromLeft(30);  // Spacing before preset browser
+
+    // --- Right side: Preset Browser ---
+    // "Preset:" label
+    presetLabel.setBounds(controlRow.removeFromLeft(55));
+    controlRow.removeFromLeft(5);
+
+    // Previous button
+    presetPreviousButton.setBounds(controlRow.removeFromLeft(30).removeFromTop(30));
+    controlRow.removeFromLeft(3);
+
+    // Preset selector
+    presetSelector.setBounds(controlRow.removeFromLeft(220).removeFromTop(28));
+    controlRow.removeFromLeft(3);
+
+    // Next button
+    presetNextButton.setBounds(controlRow.removeFromLeft(30).removeFromTop(30));
+    controlRow.removeFromLeft(10);
+
+    // Save button
+    presetSaveButton.setBounds(controlRow.removeFromLeft(60).removeFromTop(30));
+    controlRow.removeFromLeft(5);
+
+    // Delete button
+    presetDeleteButton.setBounds(controlRow.removeFromLeft(60).removeFromTop(30));
 
     area.removeFromTop(10);  // Spacing
 
@@ -864,7 +1009,8 @@ void CLEMMY3AudioProcessorEditor::resized()
                                 juce::ComboBox& waveSelector, juce::Label& waveLabel,
                                 juce::Slider& detuneSlider, juce::Label& detuneLabel,
                                 juce::TextButton& octaveUpBtn, juce::TextButton& octaveDownBtn, juce::Label& octaveLabel, juce::Label& octaveValueLabel,
-                                juce::Slider& pwSlider, juce::Label& pwLabel)
+                                juce::Slider& pwSlider, juce::Label& pwLabel,
+                                juce::Slider& driveSlider, juce::Label& driveLabel)
     {
         col.removeFromTop(10);  // Extra top padding to lower controls into boxes
 
@@ -902,13 +1048,25 @@ void CLEMMY3AudioProcessorEditor::resized()
         octaveLabel.setBounds(0, 0, 0, 0);  // Hide octave label
         col.removeFromTop(10);
 
-        // PWM knob below octave buttons (centered)
-        pwLabel.setBounds(col.removeFromTop(15));  // PWM label on top
-        auto pwmRow = col.removeFromTop(50);  // Height for PWM knob
-        int pwKnobSize = 50;
-        int pwMargin = (oscWidth - pwKnobSize) / 2;
-        pwmRow.removeFromLeft(pwMargin);
-        pwSlider.setBounds(pwmRow.removeFromLeft(pwKnobSize).removeFromTop(pwKnobSize));  // Centered PWM knob
+        // PWM and Drive knobs side-by-side (same size, rotary)
+        auto knobsRow = col.removeFromTop(80);  // Height for both knobs + labels + value displays
+        int knobSize = 55;
+        int spacing = 10;
+        int totalWidth = knobSize * 2 + spacing;
+        int knobsMargin = (oscWidth - totalWidth) / 2;
+
+        // PWM knob (left)
+        auto pwmArea = knobsRow.removeFromLeft(knobsMargin + knobSize);
+        pwmArea.removeFromLeft(knobsMargin);
+        pwLabel.setBounds(pwmArea.removeFromTop(15));
+        pwSlider.setBounds(pwmArea.removeFromTop(knobSize).removeFromLeft(knobSize));
+
+        knobsRow.removeFromLeft(spacing);
+
+        // Drive knob (right)
+        auto driveArea = knobsRow.removeFromLeft(knobSize);
+        driveLabel.setBounds(driveArea.removeFromTop(15));
+        driveSlider.setBounds(driveArea.removeFromTop(knobSize).removeFromLeft(knobSize));
     };
 
     // Layout 3 oscillators side by side
@@ -917,7 +1075,8 @@ void CLEMMY3AudioProcessorEditor::resized()
                     osc1WaveformSelector, osc1WaveformLabel,
                     osc1DetuneSlider, osc1DetuneLabel,
                     osc1OctaveUpButton, osc1OctaveDownButton, osc1OctaveLabel, osc1OctaveValueLabel,
-                    osc1PWSlider, osc1PWLabel);
+                    osc1PWSlider, osc1PWLabel,
+                    osc1DriveSlider, osc1DriveLabel);
 
     oscillatorsArea.removeFromLeft(oscSpacing);
 
@@ -926,7 +1085,8 @@ void CLEMMY3AudioProcessorEditor::resized()
                     osc2WaveformSelector, osc2WaveformLabel,
                     osc2DetuneSlider, osc2DetuneLabel,
                     osc2OctaveUpButton, osc2OctaveDownButton, osc2OctaveLabel, osc2OctaveValueLabel,
-                    osc2PWSlider, osc2PWLabel);
+                    osc2PWSlider, osc2PWLabel,
+                    osc2DriveSlider, osc2DriveLabel);
 
     oscillatorsArea.removeFromLeft(oscSpacing);
 
@@ -935,7 +1095,8 @@ void CLEMMY3AudioProcessorEditor::resized()
                     osc3WaveformSelector, osc3WaveformLabel,
                     osc3DetuneSlider, osc3DetuneLabel,
                     osc3OctaveUpButton, osc3OctaveDownButton, osc3OctaveLabel, osc3OctaveValueLabel,
-                    osc3PWSlider, osc3PWLabel);
+                    osc3PWSlider, osc3PWLabel,
+                    osc3DriveSlider, osc3DriveLabel);
 
     topRow.removeFromLeft(15);  // Spacing before right column
 
@@ -1174,4 +1335,49 @@ void CLEMMY3AudioProcessorEditor::resized()
     auto keyboardArea = area.removeFromBottom(93);  // Reasonable size, pushed close to bottom row
     keyboardArea.reduce(10, 0);
     midiKeyboard.setBounds(keyboardArea);
+}
+
+void CLEMMY3AudioProcessorEditor::updatePresetSelector()
+{
+    auto& pm = audioProcessor.getPresetManager();
+
+    presetSelector.clear();
+
+    for (int i = 0; i < pm.getNumPresets(); ++i)
+    {
+        auto presetName = pm.getPresetName(i);
+        if (pm.isFactoryPreset(i))
+        {
+            presetName = "[F] " + presetName;  // Mark factory presets
+        }
+        presetSelector.addItem(presetName, i + 1);  // IDs start at 1
+    }
+
+    presetSelector.setSelectedItemIndex(pm.getCurrentPresetIndex(), juce::dontSendNotification);
+
+    // Enable/disable delete button based on whether it's a factory preset
+    presetDeleteButton.setEnabled(!pm.isFactoryPreset(pm.getCurrentPresetIndex()));
+}
+
+void CLEMMY3AudioProcessorEditor::savePresetDialog()
+{
+    auto* window = new juce::AlertWindow("Save Preset", "Enter preset name:", juce::AlertWindow::NoIcon);
+    window->addTextEditor("presetName", "", "Preset Name:");
+    window->addButton("Save", 1, juce::KeyPress(juce::KeyPress::returnKey));
+    window->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+
+    window->enterModalState(true, juce::ModalCallbackFunction::create(
+        [this, window](int result)
+        {
+            if (result == 1)
+            {
+                auto presetName = window->getTextEditorContents("presetName");
+                if (presetName.isNotEmpty())
+                {
+                    audioProcessor.getPresetManager().saveUserPreset(presetName);
+                    updatePresetSelector();
+                }
+            }
+            delete window;
+        }), true);
 }

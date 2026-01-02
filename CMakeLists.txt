@@ -25,6 +25,7 @@ target_sources(CLEMMY3
     PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
+        Source/PresetManager.cpp
         Source/DSP/Oscillator.cpp
         Source/DSP/Envelope.cpp
         Source/DSP/Voice.cpp

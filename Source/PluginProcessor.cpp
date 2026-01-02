@@ -15,7 +15,8 @@ CLEMMY3AudioProcessor::CLEMMY3AudioProcessor()
 #else
     :
 #endif
-      parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
+      parameters(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      presetManager(parameters)
 {
 }
 
@@ -69,6 +70,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::NormalisableRange<float>(0.01f, 0.99f, 0.01f),
         0.5f));  // Default: 50%
 
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc1Drive", "Osc 1 Drive",
+        juce::NormalisableRange<float>(1.0f, 10.0f, 0.01f, 0.5f),
+        1.0f));  // Default: 1.0 (no saturation)
+
     // ==================== OSCILLATOR 2 PARAMETERS ====================
     params.push_back(std::make_unique<juce::AudioParameterBool>(
         "osc2Enabled", "Osc 2 Enabled", true));
@@ -97,6 +103,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         juce::NormalisableRange<float>(0.01f, 0.99f, 0.01f),
         0.5f));  // Default: 50%
 
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc2Drive", "Osc 2 Drive",
+        juce::NormalisableRange<float>(1.0f, 10.0f, 0.01f, 0.5f),
+        1.0f));  // Default: 1.0 (no saturation)
+
     // ==================== OSCILLATOR 3 PARAMETERS ====================
     params.push_back(std::make_unique<juce::AudioParameterBool>(
         "osc3Enabled", "Osc 3 Enabled", true));
@@ -124,6 +135,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout CLEMMY3AudioProcessor::creat
         "osc3PW", "Osc 3 Pulse Width",
         juce::NormalisableRange<float>(0.01f, 0.99f, 0.01f),
         0.5f));  // Default: 50%
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        "osc3Drive", "Osc 3 Drive",
+        juce::NormalisableRange<float>(1.0f, 10.0f, 0.01f, 0.5f),
+        1.0f));  // Default: 1.0 (no saturation)
 
     // ==================== ADSR ENVELOPE PARAMETERS ====================
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
@@ -377,6 +393,7 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     float osc1Detune = parameters.getRawParameterValue("osc1Detune")->load();
     int osc1Octave = static_cast<int>(parameters.getRawParameterValue("osc1Octave")->load());
     float osc1PW = parameters.getRawParameterValue("osc1PW")->load();
+    float osc1Drive = parameters.getRawParameterValue("osc1Drive")->load();
 
     // Oscillator 2 parameters
     bool osc2Enabled = parameters.getRawParameterValue("osc2Enabled")->load() > 0.5f;
@@ -385,6 +402,7 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     float osc2Detune = parameters.getRawParameterValue("osc2Detune")->load();
     int osc2Octave = static_cast<int>(parameters.getRawParameterValue("osc2Octave")->load());
     float osc2PW = parameters.getRawParameterValue("osc2PW")->load();
+    float osc2Drive = parameters.getRawParameterValue("osc2Drive")->load();
 
     // Oscillator 3 parameters
     bool osc3Enabled = parameters.getRawParameterValue("osc3Enabled")->load() > 0.5f;
@@ -393,6 +411,7 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     float osc3Detune = parameters.getRawParameterValue("osc3Detune")->load();
     int osc3Octave = static_cast<int>(parameters.getRawParameterValue("osc3Octave")->load());
     float osc3PW = parameters.getRawParameterValue("osc3PW")->load();
+    float osc3Drive = parameters.getRawParameterValue("osc3Drive")->load();
 
     // ADSR Envelope parameters
     float attack = parameters.getRawParameterValue("attack")->load();
@@ -421,6 +440,7 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     voiceManager.setOscillatorDetune(0, osc1Detune);
     voiceManager.setOscillatorOctave(0, osc1Octave);
     voiceManager.setOscillatorPulseWidth(0, osc1PW);
+    voiceManager.setOscillatorDrive(0, osc1Drive);
 
     // Broadcast oscillator 2 parameters to all voices
     voiceManager.setOscillatorEnabled(1, osc2Enabled);
@@ -429,6 +449,7 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     voiceManager.setOscillatorDetune(1, osc2Detune);
     voiceManager.setOscillatorOctave(1, osc2Octave);
     voiceManager.setOscillatorPulseWidth(1, osc2PW);
+    voiceManager.setOscillatorDrive(1, osc2Drive);
 
     // Broadcast oscillator 3 parameters to all voices
     voiceManager.setOscillatorEnabled(2, osc3Enabled);
@@ -437,6 +458,7 @@ void CLEMMY3AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     voiceManager.setOscillatorDetune(2, osc3Detune);
     voiceManager.setOscillatorOctave(2, osc3Octave);
     voiceManager.setOscillatorPulseWidth(2, osc3PW);
+    voiceManager.setOscillatorDrive(2, osc3Drive);
 
     // Broadcast envelope parameters
     voiceManager.setEnvelopeParameters(attack, decay, sustain, release);

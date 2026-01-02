@@ -52,6 +52,7 @@ public:
     void setOscillatorDetune(int oscIndex, float cents);       // ±100 cents
     void setOscillatorOctave(int oscIndex, int octaveOffset);  // -3 to +3
     void setOscillatorPulseWidth(int oscIndex, float pw);      // 0.01 to 0.99
+    void setOscillatorDrive(int oscIndex, float drive);        // 1.0 to 10.0 (saturation)
 
     /**
      * Noise generator parameters
@@ -130,6 +131,7 @@ private:
         float gain = 0.33f;              // Default: 33% each for 3 oscillators
         float detuneCents = 0.0f;        // ±100 cents
         int octaveOffset = 0;            // -3 to +3 octaves
+        float drive = 1.0f;              // 1.0 - 10.0 (1.0 = no saturation)
     };
 
     // DSP components

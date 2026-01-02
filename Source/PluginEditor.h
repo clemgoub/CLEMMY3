@@ -9,7 +9,8 @@
     CLEMMY3 Editor
     Phase 6: Dual LFO Modulation
 */
-class CLEMMY3AudioProcessorEditor : public juce::AudioProcessorEditor
+class CLEMMY3AudioProcessorEditor : public juce::AudioProcessorEditor,
+                                     public juce::AudioProcessorValueTreeState::Listener
 {
 public:
     CLEMMY3AudioProcessorEditor(CLEMMY3AudioProcessor&);
@@ -18,6 +19,9 @@ public:
     //==============================================================================
     void paint(juce::Graphics&) override;
     void resized() override;
+
+    // Parameter listener
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
 private:
     CLEMMY3AudioProcessor& audioProcessor;
@@ -29,6 +33,17 @@ private:
     juce::TextButton voiceModeUnisonButton;
     juce::ComboBox unisonDetuneSelector;
     juce::Label unisonDetuneLabel;
+
+    // ========== PRESET BROWSER ==========
+    juce::Label presetLabel;
+    juce::ComboBox presetSelector;
+    juce::TextButton presetPreviousButton;
+    juce::TextButton presetNextButton;
+    juce::TextButton presetSaveButton;
+    juce::TextButton presetDeleteButton;
+
+    void updatePresetSelector();
+    void savePresetDialog();
 
     // ========== OSCILLATOR 1 CONTROLS ==========
     juce::TextButton osc1EnableButton;
@@ -44,6 +59,8 @@ private:
     juce::Label osc1OctaveValueLabel;  // Displays current octave value (-3 to +3)
     juce::Slider osc1PWSlider;
     juce::Label osc1PWLabel;
+    juce::Slider osc1DriveSlider;
+    juce::Label osc1DriveLabel;
 
     // ========== OSCILLATOR 2 CONTROLS ==========
     juce::TextButton osc2EnableButton;
@@ -59,6 +76,8 @@ private:
     juce::Label osc2OctaveValueLabel;  // Displays current octave value (-3 to +3)
     juce::Slider osc2PWSlider;
     juce::Label osc2PWLabel;
+    juce::Slider osc2DriveSlider;
+    juce::Label osc2DriveLabel;
 
     // ========== OSCILLATOR 3 CONTROLS ==========
     juce::TextButton osc3EnableButton;
@@ -74,6 +93,8 @@ private:
     juce::Label osc3OctaveValueLabel;  // Displays current octave value (-3 to +3)
     juce::Slider osc3PWSlider;
     juce::Label osc3PWLabel;
+    juce::Slider osc3DriveSlider;
+    juce::Label osc3DriveLabel;
 
     // ========== MIXER CONTROLS ==========
     juce::Label noiseLabel;
@@ -148,18 +169,21 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1GainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1DetuneAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1PWAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1DriveAttachment;
 
     // Oscillator 2 - osc2Enable uses onClick handler
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc2WaveformAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2GainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2DetuneAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2PWAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2DriveAttachment;
 
     // Oscillator 3 - osc3Enable uses onClick handler
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc3WaveformAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3GainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3DetuneAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3PWAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3DriveAttachment;
 
     // Noise - noiseEnable uses onClick handler
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> noiseTypeAttachment;

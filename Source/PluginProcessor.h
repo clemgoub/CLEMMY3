@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "DSP/VoiceManager.h"
+#include "PresetManager.h"
 
 //==============================================================================
 /**
@@ -55,11 +56,17 @@ public:
     // MIDI keyboard state for virtual keyboard
     juce::MidiKeyboardState& getKeyboardState() { return keyboardState; }
 
+    // Preset manager access
+    PresetManager& getPresetManager() { return presetManager; }
+
 private:
     juce::MidiKeyboardState keyboardState;
     //==============================================================================
     // Phase 3: Polyphonic voice management
     VoiceManager voiceManager;
+
+    // Phase 7: Preset management
+    PresetManager presetManager;
 
     // Host tempo for LFO MIDI sync
     float currentBPM = 120.0f;          // Tempo from host

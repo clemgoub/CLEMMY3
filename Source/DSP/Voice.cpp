@@ -138,6 +138,14 @@ void Voice::setOscillatorPulseWidth(int oscIndex, float pw)
     }
 }
 
+void Voice::setOscillatorDrive(int oscIndex, float drive)
+{
+    if (oscIndex >= 0 && oscIndex < NUM_OSCILLATORS)
+    {
+        oscSettings[oscIndex].drive = drive;
+    }
+}
+
 //==============================================================================
 // Noise Parameter Updates
 //==============================================================================
@@ -420,6 +428,15 @@ float Voice::mixOscillators()
         if (oscSettings[i].enabled)
         {
             float oscSample = oscillators[i].processSample();
+
+            // Apply tanh saturation/drive (1.0 = bypass, >1.0 = saturation)
+            if (oscSettings[i].drive > 1.01f)  // Small threshold for floating point precision
+            {
+                // Soft saturation: tanh adds warm harmonics and compression
+                // Volume drops slightly at high drive (expected behavior)
+                oscSample = std::tanh(oscSample * oscSettings[i].drive);
+            }
+
             sum += oscSample * oscSettings[i].gain;
         }
     }

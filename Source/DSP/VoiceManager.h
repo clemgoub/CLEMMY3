@@ -51,6 +51,7 @@ public:
     void setOscillatorDetune(int oscIndex, float cents);
     void setOscillatorOctave(int oscIndex, int octaveOffset);
     void setOscillatorPulseWidth(int oscIndex, float pw);
+    void setOscillatorDrive(int oscIndex, float drive);
 
     /**
      * Noise parameters (per-voice, controlled by envelope)
